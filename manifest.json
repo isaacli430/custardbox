@@ -1,0 +1,15 @@
+{
+   "background": {
+      "scripts": [ "background.js" ]
+   },
+   "browser_action": {
+      "default_icon": "chat-icon.png",
+      "default_popup": "main.html",
+      "default_title": "WhiteBox"
+   },
+   "manifest_version": 2,
+   "name": "WhiteBox",
+   "optional_permissions": [ "https://www.jblrd.com/" ],
+   "permissions": [ "cookies", "storage", "activeTab", "system.display", "<all_urls>"],
+   "version": "2.0.6"
+}
