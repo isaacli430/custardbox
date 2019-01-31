@@ -936,86 +936,100 @@ function sendMessage(){
 }
 
 function formatText(message) {
-    u_indices = [];
-    r_indices = [];
-    b_indices = [];
-    bo_indices = [];
-    it_indices = [];
-    for (i = 0; i < message.length - 2; i++) {
-        if (message.substring(i, i+3) == "{u}") {     
-            u_indices.push(i);
+    format_list = [
+        {
+            "format": "{u}",
+            "result_b": '<span style="text-decoration: underline;">',
+            "result_e": '</span>',
+            "length": 3,
+            "indices": []
+        },
+        {
+            "format": "{red}",
+            "result_b": '<span style="color: red">',
+            "result_e": '</span>',
+            "length": 5,
+            "indices": []
+        },
+        {
+            "format": "{blue}",
+            "result_b": '<span style="color: blue">',
+            "result_e": '</span>',
+            "length": 6,
+            "indices": []
+        },
+        {
+            "format": "{purp}",
+            "result_b": '<span style="color: purple">',
+            "result_e": '</span>',
+            "length": 6,
+            "indices": []
+        },
+        {
+            "format": "{brow}",
+            "result_b": '<span style="color: brown">',
+            "result_e": '</span>',
+            "length": 6,
+            "indices": []
+        },
+        {
+            "format": "{oran}",
+            "result_b": '<span style="color: orange">',
+            "result_e": '</span>',
+            "length": 6,
+            "indices": []
+        },
+        {
+            "format": "{gree}",
+            "result_b": '<span style="color: green">',
+            "result_e": '</span>',
+            "length": 6,
+            "indices": []
+        },
+        {
+            "format": "{yell}",
+            "result_b": '<span style="color: yellow">',
+            "result_e": '</span>',
+            "length": 6,
+            "indices": []
+        },
+        {
+            "format": "{big}",
+            "result_b": '<span style="font-size: 6em;">',
+            "result_e": '</span>',
+            "length": 5,
+            "indices": []
+        },
+        {
+            "format": "*",
+            "result_b": '<b>',
+            "result_e": '</b>',
+            "length": 1,
+            "indices": []
+        },
+        {
+            "format": "_",
+            "result_b": '<i>',
+            "result_e": '</i>',
+            "length": 1,
+            "indices": []
+        },
+    ]
+    for (x = 0; x < format_list.length; x++) {
+        for (i = 0; i <= message.length - format_list[x]['length']; i++) {
+            if (message.substring(i, i+format_list[x]['length']) == format_list[x]['format']) {     
+                format_list[x]['indices'].push(i);
+            }
         }
-    }
-    for (i = 0; i < message.length - 4; i++) {
-        if (message.substring(i, i+5) == "{red}") {
-            r_indices.push(i);
+        while (true) {        
+            if (format_list[x]['indices'].length <= 1) {
+                break;
+            }
+            
+            message = message.replace(format_list[x]['format'], format_list[x]['result_b']);
+            message = message.replace(format_list[x]['format'], format_list[x]['result_e']);
+            format_list[x]['indices'].splice(0, 2);
         }
-    }  
-    for (i = 0; i < message.length - 5; i++) {
-        if (message.substring(i, i+6) == "{blue}") {
-            b_indices.push(i);
-        }
-    }   
-    for (i = 0; i < message.length; i++) {
-        if (message.substring(i, i+1) == "*") {
-            bo_indices.push(i);
-        }
-    }
-    for (i = 0; i < message.length; i++) {
-        if (message.substring(i, i+1) == "_") {
-            it_indices.push(i);
-        }
-    }  
-    
-    while (true) {
-        
-        if (u_indices.length <= 1) {
-            break;
-        }
-        
-        message = message.replace("{u}", '<span style="text-decoration: underline;">');
-        message = message.replace("{u}", '</span>');
-        u_indices.splice(0, 2);
-    }
-    while (true) {
-        
-        if (r_indices.length <= 1) {
-            break;
-        }
-        
-        message = message.replace("{red}", '<span style="color: red;">');
-        message = message.replace("{red}", '</span>');
-        r_indices.splice(0, 2);
-    }
-    while (true) {
-        
-        if (b_indices.length <= 1) {
-            break;
-        }
-        
-        message = message.replace("{blue}", '<span style="color: blue;">');
-        message = message.replace("{blue}", '</span>');
-        b_indices.splice(0, 2);
-    }
-    while (true) {
-        
-        if (bo_indices.length <= 1) {
-            break;
-        }
-        
-        message = message.replace("*", '<b>');
-        message = message.replace("*", '</b>');
-        bo_indices.splice(0, 2);
-    }
-    while (true) {
-        
-        if (it_indices.length <= 1) {
-            break;
-        }
-        
-        message = message.replace("_", '<i>');
-        message = message.replace("_", '</i>');
-        it_indices.splice(0, 2);
     }
     if (message.startsWith("/shrug")) {
         message = message.replace("/shrug", "");
@@ -1063,9 +1077,13 @@ function calcLastOnline(lastOnline) {
 }
 
 function findLinks(text) {
-    var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-    var exp2 =/(^|[^\/])(www\.[\S]+(\b|$))/gim;
-    return text.replace(exp, '<a href="$1" target="_blank">$1</a>').replace(exp2, '$1<a href="http://$2" target="_blank">$2</a>');
+    if (!text.startsWith("wb-img:/\\")) {
+        var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+        var exp2 =/(^|[^\/])(www\.[\S]+(\b|$))/gim;
+        return text.replace(exp, '<a href="$1" target="_blank">$1</a>').replace(exp2, '$1<a href="http://$2" target="_blank">$2</a>');
+    } else {
+        return "<img src='" + text.replace("wb-img:/\\", "") + "width='4em'>";
+    }
 }
 
 $(document).keydown(function(e){
