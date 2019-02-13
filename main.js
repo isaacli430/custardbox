@@ -1589,6 +1589,9 @@ function seeFriendsModal(friendId) {
 }
 
 socket.on("unacceptedRequests", function(unacceptedRequests) {
+    //only for asdfg to fix weird friend request glitch
+    if(userId == 151){unacceptedRequests -= 2;}
+
     if(unacceptedRequests != 0){
         $("#friend-requests-tab").html('Friend Requests'+("("+unacceptedRequests+")").toString().sup());
         $("#friend-requests-dropdown").html('<span class="fas fa-ellipsis-h"></span>'+("("+unacceptedRequests+")").toString().sup());
@@ -1677,7 +1680,11 @@ socket.on("friendRequests", function(reply) {
 
     $("#friendRequests").empty();
 
-    for(var i = 0; i<friendRequests.length; i++){
+    //only for asdfg to fix weird friend request glitch
+    var glitchRequests = 0;
+    if(userId == 151){glitchRequests = 2;}
+
+    for(var i = glitchRequests; i<friendRequests.length; i++){
         var usersElement = document.getElementById("friendRequests");
 
         var crossIcon = document.createElement("i");
