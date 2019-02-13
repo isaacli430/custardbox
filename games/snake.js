@@ -263,28 +263,35 @@ function highscore(){
     chrome.storage.local.get(["gameHighScore"], function(result) {
         ctx.fillStyle = theme2;
         ctx.textAlign="center";
-        if(survival){
+        if(Object.keys(result).length === 0){
+            if(survival){
+                chrome.storage.local.set({gameHighScore: {"survivalSnake": score}});
+            }
+            else{
+                chrome.storage.local.set({gameHighScore: {"snake": score}});
+                gameHighScore(game, score);
+            }
+            ctx.font="20px Verdana";
+            ctx.fillText("New High Score!: "+score,175,130);
+        }
+        else if(survival){
             var highscore = result["gameHighScore"]["survivalSnake"];
             if(!("survivalSnake" in result["gameHighScore"]) || result["gameHighScore"]["survivalSnake"] < score){ 
                 chrome.storage.local.set({gameHighScore: {"survivalSnake": score}});
                 highscore = score;
+                ctx.font="20px Verdana";
+                ctx.fillText("New High Score!",175,100);
             }
             ctx.fillText("Score: "+score,175,130);
             ctx.font="14px Verdana";
             ctx.fillText("Highscore: "+ highscore,175,152);
-        }
-        else if(Object.keys(result).length === 0){
-            chrome.storage.local.set({gameHighScore: {"snake": score}});
-            ctx.font="20px Verdana";
-            ctx.fillText("Score: "+score,175,130);
-            gameHighScore(game, score);
         }
         else if(!result["gameHighScore"].hasOwnProperty(game)){
             var gameHighscore = result["gameHighScore"];
             gameHighscore[game] = score;
             chrome.storage.local.set({gameHighScore: gameHighscore});
             ctx.font="20px Verdana";
-            ctx.fillText("Score: "+score,175,130);
+            ctx.fillText("New High Score!: "+score,175,130);
             gameHighScore(game, score);
 
         }
