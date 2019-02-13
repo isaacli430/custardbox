@@ -246,7 +246,7 @@
 						<div class="row">
 							<div class="col-12">
 								<small class="text" id="aboutPageContents">
-								Created by Joshua Bird 
+								Created by Alden and Isaac
 								</small>
 							</div>
 						</div>
@@ -320,6 +320,7 @@
 			</div>
 
 			<div class="container" id="messagePage">
+				
 				<div class="row">
 					<div class="col-11">
 						<h6 class="text mb-0" id="messagePageName" style="font-weight: 200; font-size: 16px;"></h6>
@@ -337,15 +338,26 @@
 				</div>
 				<div class="row messageRow">
 					<div class="col-9">
+						<div id="drop_zone">
 						<textarea class="form-control form-control-sm" rows="3" id="message" placeholder="Message"></textarea>
+						</div>
 					</div>
-					<div class="col-3">
-						<a class="btn btn-outline-dark btn-sm" id="sendButton">Send</a>
+					<div class="col-3 custom-file">
+						<a class="btn btn-outline-dark btn-sm" id="sendButton">Send</a><br><br>
+						<label style="background: white;"><img src="plus.png" width="25em">
+							<input type="file" id="files" name="files[]" multiple size="60" style="display: none;"/>
+						</label>
+						<output id="list"></output>
+					</div>
+					<div class="col-10"></div>
+					<div class="col-11">
+						
 					</div>
 				</div>
 			</div>
 
 			<div class="row">
+					
 				<button class="textLink footerButton " id="backButton">Back</button>
 				<br>
 			</div>

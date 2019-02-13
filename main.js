@@ -11,8 +11,11 @@ login();
 
 $("#backButton").on("click", goBack);
 $("#sendButton").on("click", sendMessage);
+$("#imgButton").on("click", uploadImg);
 $("#toggleBackgroundButton").on("click", toggleBackground);
 $("#setBackgroundOffsetsButton").on("click", setBackgroundOffsets);
+
+$("#files").on("change", handleFileSelect);
 
 // Delete Account
 $("#deleteAccountButton").on("click", promptDeleteAccount);
@@ -918,21 +921,75 @@ function searchUsers(){
     socket.emit("searchUsers", [userId, randomKey, username, usernameToSearch]);
 }
 
-function sendMessage(){
+function uploadImg() {
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+        // Great success! All the File APIs are supported.
+      } else {
+        alert('The File APIs are not fully supported in this browser.');
+      }
+}
+
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+function handleFileSelect(evt) {
+    var $files = $(this).get(0).files;
+    var formData = new FormData();
+    formData.append("image", $files[0]);
+    sendImg(formData);
+    
+}
+
+function sendImg(data) {
+    var settings = {
+        async: false,
+        crossDomain: true,
+        processData: false,
+        contentType: false,
+        type: 'POST',
+        url: 'https://api.imgur.com/3/image',
+        headers: {
+          Authorization: "Client-ID 86dea04cb4927c2",
+          Accept: 'application/json'
+        },
+        mimeType: 'multipart/form-data'
+    };
+    settings.data = data;
+    $.ajax(settings).done(function (response) {
+        var data = JSON.parse(response);
+        sendImgMsg("wb-img://" + data.data.link.replace("https://", ""));
+    });
+}
+
+function sendImgMsg(message) {
     var unixTime = Math.round(+new Date()/1000);
-    var messageElement = document.getElementById("message");
-    var message = messageElement.value.replace("\n", "");
+        var reply = [username, randomKey, message, clickedChat.id, userId, clickedChat.name, clickedChat.type];
 
-    messageElement.value = ""; // Clear message box
+        // Send message to server
+        socket.emit("message", reply);
+}
 
-    if(message === "") return;
-    message = formatText(message);
-    message = unescape(encodeURIComponent(message));
+function sendMessage(){
+        var unixTime = Math.round(+new Date()/1000);
+        var messageElement = document.getElementById("message");
+        var message = messageElement.value.replace("\n", "");
 
-    var reply = [username, randomKey, message, clickedChat.id, userId, clickedChat.name, clickedChat.type];
+        messageElement.value = ""; // Clear message box
 
-    // Send message to server
-    socket.emit("message", reply);
+        if(message === "") return;
+        message = formatText(message);
+        message = unescape(encodeURIComponent(message));
+
+        var reply = [username, randomKey, message, clickedChat.id, userId, clickedChat.name, clickedChat.type];
+
+        // Send message to server
+        socket.emit("message", reply);
 }
 
 function formatText(message) {
@@ -1077,12 +1134,12 @@ function calcLastOnline(lastOnline) {
 }
 
 function findLinks(text) {
-    if (!text.startsWith("wb-img:/\\")) {
+    if (!text.startsWith("wb-img://")) {
         var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
         var exp2 =/(^|[^\/])(www\.[\S]+(\b|$))/gim;
         return text.replace(exp, '<a href="$1" target="_blank">$1</a>').replace(exp2, '$1<a href="http://$2" target="_blank">$2</a>');
     } else {
-        return "<img src='" + text.replace("wb-img:/\\", "") + "width='4em'>";
+        return "<img src='" + text.replace("wb-img://", "http://") + "' width='200em'>";
     }
 }
 

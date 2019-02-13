@@ -10,6 +10,6 @@
    "manifest_version": 2,
    "name": "WhiteBox",
    "optional_permissions": [ "https://www.jblrd.com/" ],
-   "permissions": [ "cookies", "storage", "activeTab", "system.display", "<all_urls>"],
+   "permissions": [ "cookies", "storage", "activeTab", "system.display", "<all_urls>", "webview"],
    "version": "2.0.6"
 }

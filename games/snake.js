@@ -264,7 +264,7 @@ function highscore(){
         ctx.fillStyle = theme2;
         ctx.textAlign="center";
         if(survival){
-            highscore = result["gameHighScore"]["survivalSnake"];
+            var highscore = result["gameHighScore"]["survivalSnake"];
             if(!("survivalSnake" in result["gameHighScore"]) || result["gameHighScore"]["survivalSnake"] < score){ 
                 chrome.storage.local.set({gameHighScore: {"survivalSnake": score}});
                 highscore = score;
