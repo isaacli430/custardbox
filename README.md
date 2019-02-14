@@ -1,15 +1,22 @@
 # Installing the WhiteBox Mod
 
-Download the zip file and decompress it.
+1. Open up Terminal, and copy-paste this following code:
 
-![First Pic](https://i.imgur.com/mLoG5l5.png)
+```
+git --version
+```
+
+If it prompts you to install Git, install it.
 
 
-Go to `chrome://extensions`, turn on `Developer Mode`, and click on `Load Unpacked`.
+2. Type the following code into Terminal:
+
+```
+cd desktop
+git clone http://github.com/kwugfighter/whitebox
+```
+
+
+3. Go to `chrome://extensions`, turn on `Developer Mode`, click on `Load Unpacked`, and find the folder named `whitebox-master`.
 
 ![Second Pic](https://i.imgur.com/NjIfMjL.png)
-
-
-Select the folder that you just downloaded.
-
-![Third Pic](https://i.imgur.com/L9qcjo4.png)
