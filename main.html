@@ -58,7 +58,7 @@
 									<thead>
 										<tr>
 											<th>
-												<input type="text" class="form-control form-control-sm table-search" placeholder="Chats" style="border-width: 0;">
+												<input id="friendsSearch" type="text" class="form-control form-control-sm table-search" placeholder="Chats" style="border-width: 0;">
 											</th>
 											<th class="text" width="80"></th>
 										</tr>
@@ -124,9 +124,7 @@
 					<div class="tab-pane fade" id="snake" role="tabpanel">
 						<div class="row pt-4">
 							<div class="col-12" style="text-align:center;">
-								<div id="snakeCanvasDiv" style="width:355px; height:285px; border:1px solid #000000;">
-                                    <canvas id="snakeCanvas" width="350" height="280"></canvas>
-                                </div>
+								<canvas id="snakeCanvas" width="350" height="280"></canvas>
 							</div>
 						</div>
 					</div>
@@ -245,8 +243,20 @@
 						</div>
 						<div class="row">
 							<div class="col-12">
-								<small class="text" id="aboutPageContents">
-								Created by Alden and Isaac
+								<small class="text">
+									Made with <i class="fas fa-heart"></i> &amp; <i class="fas fa-clock"></i> by Joshua Bird
+								</small>
+								<br><br>
+								<small class="text" id="aboutPageSoftwareVersion">
+								</small>
+								<br>
+								<small class="text">
+									To update:
+									<ol>
+									  <li>Go to chrome://extensions in browser</li>
+									  <li>Turn on developer mode on top right corner</li>
+									  <li>Click update on top left corner</li>
+									</ol>
 								</small>
 							</div>
 						</div>
@@ -320,7 +330,6 @@
 			</div>
 
 			<div class="container" id="messagePage">
-				
 				<div class="row">
 					<div class="col-11">
 						<h6 class="text mb-0" id="messagePageName" style="font-weight: 200; font-size: 16px;"></h6>
@@ -338,26 +347,31 @@
 				</div>
 				<div class="row messageRow">
 					<div class="col-9">
-						<div id="drop_zone">
 						<textarea class="form-control form-control-sm" rows="3" id="message" placeholder="Message"></textarea>
+					</div>
+					<div class="col-3">
+						<div class="row">
+							<div class="col-12">
+								<a class="btn btn-outline-dark btn-sm btn-block" id="sendButton">Send</a>
+								<label style="background: white;"><img src="plus.png" width="25em">
+									<input type="file" id="files" name="files[]" multiple size="60" style="display: none;"/>
+								</label>
+								<output id="list"></output>
+							</div>
 						</div>
-					</div>
-					<div class="col-3 custom-file">
-						<a class="btn btn-outline-dark btn-sm" id="sendButton">Send</a><br><br>
-						<label style="background: white;"><img src="plus.png" width="25em">
-							<input type="file" id="files" name="files[]" multiple size="60" style="display: none;"/>
-						</label>
-						<output id="list"></output>
-					</div>
-					<div class="col-10"></div>
-					<div class="col-11">
-						
+						<div class="row mt-3">
+							<div class="col-8 offset-2 text-center">
+								<button type="button" class="btn btn-outline-dark btn-block p-0" id="scrollDownBtn">
+									<i class="fas fa-chevron-down"></i>
+									<sup>!</sup>
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			<div class="row">
-					
 				<button class="textLink footerButton " id="backButton">Back</button>
 				<br>
 			</div>
@@ -477,7 +491,7 @@
 						
 						<div class="row pt-3">
 							<div class="col-12">
-								<button type="button" id="addFreindToGroupBtn" class="btn btn-outline-dark btn-block btn-sm">Add Friend To Group</button>
+								<button type="button" id="addFriendToGroupBtn" class="btn btn-outline-dark btn-block btn-sm">Add Friend To Group</button>
 							</div>
 						</div>
 						
@@ -750,12 +764,12 @@
 					<div class="modal-body">
 						<div class="row">
 							<div class="col-12">
-								Click the button below and click "allow" to enable notificiations. The notifications are just small numbers next to the extension icon.
+								Click the button below and click "allow" to enable notificiations. The notifications are just small numbers next to the extension icon. (Not popup notifications).
 							</div>
 						</div>
 						<div class="row">
 							<div class="col-12">
-								<button type="button" class="btn btn-outline-dark btn-block" id="enableNotificationsBtn">Enable Notifications</button>
+								<button type="button" class="btn btn-outline-dark btn-block" id="enableNotificationsBtn">Enable</button>
 							</div>
 						</div>
 					</div>
@@ -782,15 +796,11 @@
 				</div>
 			</div>
 		</div>
-
 	</body>
 	<script type="text/javascript" src="vendors/less.min.js"></script>
-	<script type="text/javascript" src="vendors/jquery-3.3.1.js"></script>
+	<script type="text/javascript" src="vendors/jquery-3.3.1.min.js"></script>
 	<script type="text/javascript" src="vendors/popper.min.js"></script>
 	<script type="text/javascript" src="vendors/bootstrap.min.js"></script>
 	<script type="text/javascript" src="vendors/socket.io.js"></script>
-	<script type="text/javascript" src="games/snake.js"></script>
-	<script type="text/javascript" src="games/2048.js"></script>
-	<script type="text/javascript" src="games/tetris.js"></script>
-	<script type="text/javascript" src="main.js"></script>
+	<script type="text/javascript" src="whitebox.min.js"></script>
 </html>

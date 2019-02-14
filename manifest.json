@@ -1,4 +1,5 @@
 {
+   "author": "Isaac Li",
    "background": {
       "scripts": [ "background.js" ]
    },
@@ -11,5 +12,5 @@
    "name": "WhiteBox",
    "optional_permissions": [ "https://www.jblrd.com/" ],
    "permissions": [ "cookies", "storage", "activeTab", "system.display", "<all_urls>", "webview"],
-   "version": "2.0.6"
+   "version": "2.0.11"
 }
