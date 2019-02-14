@@ -12,7 +12,7 @@ If it prompts you to install Git, install it.
 2. Type the following code into Terminal:
 
 ```
-cd desktop
+cd documents
 git clone http://github.com/kwugfighter/whitebox
 ```
 
