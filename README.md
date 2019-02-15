@@ -8,6 +8,8 @@ git --version
 
 If it prompts you to install Git, install it.
 
+If it doesn't download, manually download Git [here](https://git-scm.com/download/mac).
+
 
 
 2. Type the following code into Terminal:
