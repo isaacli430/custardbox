@@ -30,7 +30,7 @@ git clone http://github.com/kwugfighter/whitebox
 
 # Updating the Mod
 
-Open up Terminal and copy-paste the following code:
+Open a new Terminal window and copy-paste the following code:
 ```
 sh ~/documents/whitebox/update.sh
 ```
