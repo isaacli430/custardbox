@@ -30,7 +30,6 @@ function checkForNotifications(){
     var params = "validator="+validator+"&userId="+userId;
     http.send(params)
     http.onload = function() {
-    	var notifs = http.responseText;
     	if(http.status == 400){
 			chrome.storage.local.get(["whiteboxId"], function(result) {
 			    if(result["whiteboxId"] != ""){
@@ -47,12 +46,11 @@ function checkForNotifications(){
 			chrome.browserAction.setBadgeText({text: ""});
     	}
     	else{
-    		if(userId == 151){notifs -= 2;}
-    		if(notifs == 0){
+    		if(http.responseText == 0){
 				chrome.browserAction.setBadgeText({text: ""});
     		}
     		else{
-				chrome.browserAction.setBadgeText({text: notifs.toString()});
+				chrome.browserAction.setBadgeText({text: http.responseText});
 			}
     	}
     }

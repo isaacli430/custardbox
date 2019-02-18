@@ -5,6 +5,8 @@
 		<link rel="stylesheet/less" href="main.less">
 		<link rel="stylesheet" href="vendors/bootstrap.min.css">
 		<link rel="stylesheet" href="vendors/all.min.css">
+		<link rel="stylesheet" href="vendors/jquery-ui.min.css">
+		<link rel="stylesheet" href="vendors/chessboardjs-0.3.0/chessboard-0.3.0.min.css">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	</head>
 	<body>
@@ -30,13 +32,9 @@
 						</div>
 					</li>
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle py-1" id="games-dropdown" data-toggle="dropdown" href="#games" role="button">
+						<a class="nav-link py-1" id="games-tab" data-toggle="tab" href="#games" role="tab">
 							<span class="fas fa-gamepad"></span></a>
-						<div class="dropdown-menu">
-							<a class="dropdown-item dropdown-text" id="snake-tab" data-toggle="tab" href="#snake" role="tab">Snake</a>
-							<a class="dropdown-item dropdown-text" id="2048-game-tab" data-toggle="tab" href="#2048-game" role="tab">2048</a>
-							<a class="dropdown-item dropdown-text" id="tetris-tab" data-toggle="tab" href="#tetris" role="tab">Tetris</a>
-						</div>
+						</a>
 					</li>
 					<li class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle py-1" id="friend-requests-dropdown" data-toggle="dropdown" href="#" role="button">
@@ -121,27 +119,38 @@
 						</div>
 					</div>
 
-					<div class="tab-pane fade" id="snake" role="tabpanel">
-						<div class="row pt-4">
-							<div class="col-12" style="text-align:center;">
-								<canvas id="snakeCanvas" width="350" height="280"></canvas>
+					<div class="tab-pane fade" id="games" role="tabpanel">
+						<div id="selectGame">
+							<div class="row">
+								<div style="overflow-y: scroll; height:300px;" class="col-12">
+									<table class="table table-sm outputTable">
+										<thead>
+											<tr>
+												<th>
+													<input type="text" class="form-control form-control-sm table-search" placeholder="Games" style="border-width: 0;">
+												</th>
+											</tr>
+										</thead>
+										<tbody id="gamesTable">	
+										  	<tr>
+										    	<td class="textLink gameSelect" data-game-name="snake">Snake</td>
+										  	</tr>
+										  	<tr>
+										    	<td class="textLink gameSelect" data-game-name="2048">2048</td>
+										  	</tr>
+										  	<tr>
+										    	<td class="textLink gameSelect" data-game-name="tetrisDash">Tetris Sprint</td>
+										  	</tr>
+										  	<tr>
+										    	<td class="textLink gameSelect" data-game-name="chess">Chess</td>
+										  	</tr>
+										</tbody>
+									</table>
+								</div>
 							</div>
 						</div>
-					</div>
 
-					<div class="tab-pane fade" id="2048-game" role="tabpanel">
-						<div class="row pt-2">
-							<div class="col-12" style="text-align:center;">
-								<canvas id="2048Canvas" width="350" height="370"></canvas>
-							</div>
-						</div>
-					</div>
-
-					<div class="tab-pane fade" id="tetris" role="tabpanel">
-						<div class="row pt-2">
-							<div class="col-12" style="text-align:center;">
-								<canvas id="tetrisCanvas" width='350' height='500'></canvas>
-							</div>
+						<div id="gameArea">
 						</div>
 					</div>
 
@@ -347,13 +356,13 @@
 				</div>
 				<div class="row messageRow">
 					<div class="col-9">
-						<textarea class="form-control form-control-sm" rows="3" id="message" placeholder="Message"></textarea>
+						<textarea class="form-control form-control-sm mention" rows="3" id="message" placeholder="Message"></textarea>
 					</div>
 					<div class="col-3">
 						<div class="row">
 							<div class="col-12">
 								<a class="btn btn-outline-dark btn-sm btn-block" id="sendButton">Send</a><br><br>
-								  <button id="filePickerButton" type="button" class="btn btn-outline-dark btn-sm" style="width: 4.5em; height: 2.2em;">
+								<button id="filePickerButton" type="button" class="btn btn-outline-dark btn-sm" style="width: 4.5em; height: 2.2em;">
 									Files
 								  </button>
 								  <input type="file" id="files" name="files[]" multiple size="60" style="display: none;"/>
@@ -434,7 +443,7 @@
 		<!-- FRIENDS SETTINGS -->
 
 		<div class="modal fade" id="friendSettingsModal">
-			<div class="modal-dialog modal-dialog-slideout">
+			<div class="modal-dialog modal-dialog-slideout-right">
 				<div class="modal-content">
 					<div class="modal-body">
 
@@ -472,7 +481,7 @@
 		<!-- GROUP SETTINGS -->
 
 		<div class="modal fade" id="groupSettingsModal">
-			<div class="modal-dialog modal-dialog-slideout">
+			<div class="modal-dialog modal-dialog-slideout-right">
 				<div class="modal-content">
 					<div class="modal-body">
 
@@ -592,6 +601,14 @@
 					</div>
 				</div>
 			</div>
+		</div>
+
+
+		<!-- NOTIFICATION -->
+
+		<div id="notificationDiv" style="z-index: 100;">
+			<h6>
+			</h6>
 		</div>
 
 
@@ -764,7 +781,7 @@
 					<div class="modal-body">
 						<div class="row">
 							<div class="col-12">
-								Click the button below and click "allow" to enable notificiations. The notifications are just small numbers next to the extension icon. (Not popup notifications).
+								Click the button below and click "Enable" to enable notificiations. The notifications are just small numbers next to the extension icon. (Not popup notifications).
 							</div>
 						</div>
 						<div class="row">
@@ -802,5 +819,13 @@
 	<script type="text/javascript" src="vendors/popper.min.js"></script>
 	<script type="text/javascript" src="vendors/bootstrap.min.js"></script>
 	<script type="text/javascript" src="vendors/socket.io.js"></script>
+	<script type="text/javascript" src="vendors/markdown-it.min.js"></script>
+	<script type="text/javascript" src="vendors/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="vendors/markdown-it-hashtag.min.js"></script>
+	<script type="text/javascript" src="vendors/chess.min.js"></script>
+	<script type="text/javascript" src="vendors/chessboardjs-0.3.0/chessboard-0.3.0.min.js"></script>
+	<!-- Development Files Start -->
+	<script type="text/javascript" src="main.js"></script>
+	<!-- Development Files End -->
 	<script type="text/javascript" src="whitebox.min.js"></script>
 </html>
