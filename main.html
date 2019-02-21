@@ -13,7 +13,7 @@
 		<div class="container">
 
 			<div>
-				<a class="title">WhiteBox</a>
+				<a class="title">CustardBox</a>
 			</div>
 
 			<div id="mainTabs">
@@ -60,14 +60,16 @@
 											</th>
 											<th class="text" width="80"></th>
 										</tr>
+										
 									</thead>
 									<tbody id="users">
 									</tbody>
 								</table>
+								<img height="243px" src="loading-slider.gif" id="loadGif">
 							</div>
+							
 						</div>
 					</div>
-
 					<div class="tab-pane fade" id="add-friends" role="tabpanel">
 						<div class="row">
 							<div style="overflow-y: scroll; height:300px;" class="col-12">
@@ -93,7 +95,7 @@
 							</div>
 						</div>
 					</div>
-
+					
 					<div class="tab-pane fade" id="make-group" role="tabpanel">
 						<div class="row">
 							<div style="overflow-y: scroll; height:300px;" class="col-12">
@@ -253,7 +255,7 @@
 						<div class="row">
 							<div class="col-12">
 								<small class="text">
-									Made with <i class="fas fa-heart"></i> &amp; <i class="fas fa-clock"></i> by Joshua Bird
+									Created by Isaac Li
 								</small>
 								<br><br>
 								<small class="text" id="aboutPageSoftwareVersion">
@@ -261,11 +263,7 @@
 								<br>
 								<small class="text">
 									To update:
-									<ol>
-									  <li>Go to chrome://extensions in browser</li>
-									  <li>Turn on developer mode on top right corner</li>
-									  <li>Click update on top left corner</li>
-									</ol>
+									Type sh ~/documents/custardbox/update.sh into a new Terminal window.
 								</small>
 							</div>
 						</div>
@@ -280,53 +278,14 @@
 							Login
 						</a>
 					</li>
-					<li class="nav-item">
-						<a class="nav-link py-1" id="create-account-tab" data-toggle="tab" href="#create-account" role="tab">
-							Create Account
-						</a>
-					</li>
 				</ul>
 				<div class="tab-content pt-3">
 					<div class="tab-pane fade show active" id="login" role="tabpanel">
 						<form id="login-form">
 							<div class="form-group">
-								<div class="row">
-									<div class="col-8">
-										<input type="text" class="form-control form-control-sm" id="loginUsername" placeholder="Username">
-									</div>
-								</div>
 								<div class="row pt-2">
 									<div class="col-8">
-										<input type="password" class="form-control form-control-sm" id="loginPassword" placeholder="Password">
-									</div>
-									<div class="col-4">
-										<button type="submit" class="btn btn-outline-dark btn-sm">Submit</button>
-									</div>
-								</div>
-							</div>
-						</form>
-					</div>
-					<div class="tab-pane fade" id="create-account" role="tabpanel">
-						<form id="create-account-form">
-							<div class="form-group">
-								<div class="row">
-									<div class="col-8">
-										<input type="text" class="form-control form-control-sm" id="create-account-username" placeholder="Username">
-									</div>
-								</div>
-								<div class="row pt-2">
-									<div class="col-8">
-										<input type="email" class="form-control form-control-sm" id="create-account-email" placeholder="Email">
-									</div>
-								</div>
-								<div class="row pt-2">
-									<div class="col-8">
-										<input type="password" class="form-control form-control-sm" id="create-account-password" placeholder="Password">
-									</div>
-								</div>
-								<div class="row pt-2">
-									<div class="col-8">
-										<input type="password" class="form-control form-control-sm" id="create-account-confirm-password" placeholder="Confirm Password">
+										<input type="password" class="form-control form-control-sm" id="loginPassword" placeholder="Token">
 									</div>
 									<div class="col-4">
 										<button type="submit" class="btn btn-outline-dark btn-sm">Submit</button>

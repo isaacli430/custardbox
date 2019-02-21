@@ -1,35 +1,25 @@
-//  __        ___     _ _       ____            
-//  \ \      / / |__ (_) |_ ___| __ )  _____  __
-//   \ \ /\ / /| '_ \| | __/ _ \  _ \ / _ \ \/ /
-//    \ V  V / | | | | | ||  __/ |_) | (_) >  < 
-//     \_/\_/  |_| |_|_|\__\___|____/ \___/_/\_\
-//           -A passion project from Joshua Bird
-//
-//  If you are looking at this right now you are
-//  probably trying to cheat in a game. If you
-//  do, you will be permanently banned without
-//  notice.
+//    ____          _                _ ____            
+//   / ___|   _ ___| |_ __ _ _ __ __| | __ )  _____  __
+//  | |  | | | / __| __/ _` | '__/ _` |  _ \ / _ \ \/ /
+//  | |__| |_| \__ \ || (_| | | | (_| | |_) | (_) >  < 
+//   \____\__,_|___/\__\__,_|_|  \__,_|____/ \___/_/\_\                                                 
 
 (function() {              
-//var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.12/whitebox-websocket/socket.io"});
-window.socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+// var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.12/whitebox-websocket/socket.io"});
+// window.socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+window.socket = io.connect('http://128.199.103.165:8080'); 
 $("#files").on("change", handleFileSelect);
 $("#filePickerButton").click(function() {
     $("#files").click();
 })
-var md = window.markdownit({linkify: true})
-    .use(window.markdownitHashtag, {
-              // pattern for hashtags with normal string escape rules
-              hashtagRegExp: '([^\\s]+)',
-              // pattern for allowed preceding content
-              preceding:     '^|\\s'
-            });
 
 // Make link open in new tab
 
 socket.on("connected", function() {
     login();
 });
+
+var validator;
 
 $("#backButton").on("click", goBack);
 $("#sendButton").on("click", sendMessage);
@@ -76,6 +66,7 @@ var aboutButtonElement = $("#aboutButton");
 var backButtonElement = $("#backButton");
 var messagePageElement = $("#messagePage");
 var mainTabs = $("#mainTabs");
+var discordId;
 
 // Login
 var softwareVersion = chrome.runtime.getManifest().version;
@@ -92,6 +83,8 @@ var backgroundYOffset;
 
 var backgroundEnabled;
 var currGlobalTheme;
+var currChannel;
+
 chrome.storage.local.get(["theme"], function(e) {
     currGlobalTheme = e.theme;
 });
@@ -103,12 +96,6 @@ ySlider.onchange = changeBackgroundPos;
 
 setInterval(refreshBackground, 1000);
 setInterval(checkConnection, 5000);
-
-chrome.storage.local.get(["chats"], function(result) {
-    if(result.chats != undefined && result.chats.length){
-        refreshChats(result.chats);
-    }
-});
 
 chrome.storage.local.get(["theme"], function(result) {
     if(result.theme === "light"){
@@ -170,39 +157,25 @@ var numOfFriendRequests;
 var friends;
 var groups;
 var userId;
-var timeUntilNewHeader = 600;
+var timeUntilNewHeader = 600000;
 var messageBufferDistance = 0; // Distance in px when to start loading previous messages
 var maxUsernameLength = 25;
+var discordMessages = {};
+var currServerId;
 
-function getMessages(){
-    if(clickedChat.type == 0){
-        var messages = friends[clickedChat.id].messages;
-        if(messages != undefined){
-            return messages;
-        }
-        else{
-            return [];
-        }
-    }
-    else if(clickedChat.type == 1){
-        var messages = groups[clickedChat.id].messages;
-        if(messages != undefined){
-            return messages;
-        }
-        else{
-            return [];
-        }
+function getMessages(channelId, type){
+    if (type == "load") {
+        socket.emit('getMessages', {token: validator, channelId: channelId, serverId: currServerId});
+    } else if (type == "refresh") {
+        return discordMessages[currServerId][channelId];
     }
 }
 
-function setMessages(messages){
-    if(clickedChat.type == 0){
-        friends[clickedChat.id].messages = messages;
-    }
-    else if(clickedChat.type == 1){
-        groups[clickedChat.id].messages = messages;
-    }
-}
+socket.on('gotMessages', function(reply) {
+    discordMessages[currServerId] = {};
+    discordMessages[currServerId][reply.channelId] = reply.messages;
+    refreshMessagePage(reply.channelId, "refresh");
+});
 
 function hideEverything(){
     userInputElement.hide();
@@ -431,29 +404,33 @@ function deleteCustomTheme(shortCustomThemeName) {
 $("#login-form").submit(function(event) {
     event.preventDefault();
 
-    var loginUsername = $("#loginUsername").val();
     var loginPassword = $("#loginPassword").val();
 
-    socket.emit("userLogin", {username: loginUsername, password: loginPassword, softwareVersion: softwareVersion});
+    socket.emit("userLogin", {token: loginPassword});
 });
 
 function login() {
-    chrome.storage.local.get(["whiteboxId", "whiteboxUsername", "validator"], function(result) {
-        if(!("whiteboxUsername" in result) || !("whiteboxId" in result) || !("validator" in result) ||
-           result.whiteboxId === null || result.whiteboxUsername === null || result.validator === null){
+    chrome.storage.local.get(["validator"], function(result) {
+        if(!("validator" in result) || result.validator === null){
             hideEverything();
             userInputElement.show();
             aboutButtonElement.show();
         }
         else{
-            userId = result.whiteboxId;
-            username = result.whiteboxUsername;
-            var validator = result.validator;
-
-            socket.emit("autoLogin", {userId: userId, validator: validator, softwareVersion: softwareVersion, username: username});
+            validator = result.validator;
+            socket.emit("autoLogin", {token: validator});
         }
     });
 }
+
+socket.on('gotUserId', function(reply) {
+    discordId = reply.id;
+})
+
+socket.on("serverReset", function() {
+    chrome.storage.local.clear();
+    window.close();
+});
 
 socket.on("loginReply", function(reply){
     var status = reply.status;
@@ -462,8 +439,6 @@ socket.on("loginReply", function(reply){
         hideEverything();
         userInputElement.show();
         aboutButtonElement.show();
-        
-        $('#loginUsername').attr('style', 'border-color: red !important;');
 
         $("#loginPassword").val("");
         $("#loginPassword").attr("placeholder", "Credentials Incorrect");
@@ -474,98 +449,26 @@ socket.on("loginReply", function(reply){
         mainTabs.show();
         aboutButtonElement.show();
 
-        userId = reply.userId;
-        username = reply.username;
-        var validator;
-        if(reply.validator != null){
-            chrome.storage.local.set({validator: reply.validator});
+        if(reply.token != null){
+            chrome.storage.local.set({validator: reply.token});
         }
 
-        chrome.storage.local.set({whiteboxId: userId});
-        chrome.storage.local.set({whiteboxUsername: username});
-        chrome.storage.sync.set({randomKey: null});
-        
-        socket.emit("refreshUsers", {username: username});
+        validator = reply.token;
+        socket.emit("getUserId", {token: validator})
+        socket.emit("refreshUsers", {token: reply.token});
     }
 });
 
 function logout() {
-    chrome.storage.local.get(["validator"], function(result) {
-        if(result.validator != null){
-            var validator = result.validator;
-            socket.emit("logout", {username: username, validator: validator});
-        }
-
-        chrome.storage.local.clear();
-
-        window.close();
-    });
+    chrome.storage.local.clear();
+    window.close();
+    socket.emit('logout', {token: validator});
 }
 
-$("#create-account-form").submit(function(event) {
-    event.preventDefault();
-
-    var createAccountUsername = $("#create-account-username").val();
-    var createAccountEmail = $("#create-account-email").val();
-    var createAccountPassword = $("#create-account-password").val();
-    var createAccountConfirmPassword = $("#create-account-confirm-password").val();
-
-    if(createAccountUsername.length>maxUsernameLength){
-        $("#create-account-username").val("");
-        $("#create-account-username").attr("placeholder", "Username too long");
-    }
-    else if(!(/^[a-zA-Z0-9\-_.]+$/.test(createAccountUsername))){ // Does not match regex
-        $("#create-account-username").val("");
-        $("#create-account-username").attr("placeholder", "Illegal characters");
-    }
-    else if(createAccountUsername.length == 0){
-        $("#create-account-username").val("");
-        $("#create-account-username").attr("placeholder", "Enter Username");
-    }
-    else if(createAccountEmail.length == 0){
-        $("#create-account-email").val("");
-        $("#create-account-email").attr("placeholder", "Enter Email");
-    }
-    else if(createAccountPassword != createAccountConfirmPassword){
-        $("#create-account-confirm-password").val("");
-        $("#create-account-confirm-password").attr("placeholder", "Does not match");
-    }
-    else if(createAccountPassword.length < 8){
-        $("#create-account-password").val("");
-        $("#create-account-confirm-password").val("");
-        $("#create-account-password").attr("placeholder", "Password too short");
-    }
-    else{
-        socket.emit("createAccount", {username: createAccountUsername, 
-                                      email: createAccountEmail,
-                                      password: createAccountPassword,
-                                      softwareVersion: softwareVersion});
-    }
-});
-
-socket.on("createAccountReply", function(reply){
-    if(reply.status === "OK"){
-        userId = reply.userId;
-        username = reply.username;
-        var validator = reply.validator;
-
-        chrome.storage.local.set({whiteboxId: userId});
-        chrome.storage.local.set({whiteboxUsername: username});
-        chrome.storage.local.set({validator: validator});
-        chrome.storage.sync.set({randomKey: null});
-        chrome.runtime.sendMessage({turnOnNotifications: 1});
-
-        login();
-    }
-    else if(reply.status === "ERROR: username taken"){
-        $("#create-account-username").val("");
-        $("#create-account-username").attr("placeholder", "Username Taken");
-        $('#create-account-username').attr('style', 'border-color: red !important;');
-    }
-});
-
 $("#friends-tab").on('show.bs.tab', function(){
-    socket.emit("refreshUsers", {username: username});
+    chrome.storage.local.get(["validator"], function(result) {
+        socket.emit("refreshUsers", {token: result.validator});
+    });
 });
 
 $("#friend-requests-tab").on('show.bs.tab', function(){
@@ -809,7 +712,7 @@ $("#addFriendToGroupBtn").on("click", function() {
             if(!(friendId in groupMembers && groupMembers[friendId].status != 0)){
                 socket.emit("addFriendToGroup", {username: username, groupId: clickedChat.id, friendId: friendId});
                 $('button[data-friendId="'+friendId+'"] > i').attr("class", "fas fa-check fa-fw");
-                socket.emit("refreshUsers", {username: username});
+                socket.emit("refreshUsers", {token: validator});
             }
         });
     });
@@ -874,14 +777,14 @@ $("#seeGroupMembersBtn").on("click", function() {
     function removeMemberFromGroup(memberId){
         var memberName = groupMembers[memberId].username;
         socket.emit("removeMemberFromGroup", {username: username, groupId: clickedChat.id, memberId: memberId, memberName: memberName});
-        socket.emit("refreshUsers", {username: username});
+        socket.emit("refreshUsers", {token: validator});
         $("#seeGroupMembersTable>tr[data-memberId='"+ memberId +"']").remove();
     }
 });
 
 $("#leaveGroupBtn").on("click", function() {
     socket.emit("removeMemberFromGroup", {username: username, groupId: clickedChat.id, memberId: userId, memberName: username});
-    socket.emit("refreshUsers", {username: username});
+    socket.emit("refreshUsers", {token: validator});
     $("#groupSettingsModal").modal("hide");
     goBack();
 });
@@ -901,8 +804,6 @@ function goBack(){
     }
     else{
         stoppedTyping();
-
-        clickedChat = undefined;
         hideEverything();
 
         if(previousPage === "userInputElement"){
@@ -910,7 +811,8 @@ function goBack(){
         }
         else{
             mainTabs.show();
-            socket.emit("refreshUsers", {username: username});
+            $("#loadGif").show();
+            socket.emit("refreshUsers", {token: validator});
         }
 
         aboutButtonElement.show();
@@ -940,19 +842,9 @@ function scrollDown() {
     document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight; // Scroll to bottom
 }
 
-function openMessagePage(c, type){
-    var clickedName;
-    if(type == 0){
-        clickedName = friends[c].name;
-    }
-    else if(type == 1){ 
-        clickedName = groups[c].name;
-    }
-
-    clickedChat = {id: c, type: type, name: clickedName};
-
+function openMessagePage(channelId, name){
     $("#messageScroll").contents().remove();
-    $("#messagePageName").html(clickedChat.name);
+    $("#messagePageName").html(name);
     $("#messagePageLastOnline").text("");
 
     hideEverything();
@@ -960,19 +852,14 @@ function openMessagePage(c, type){
     messagePageElement.show();
     aboutButtonElement.show();
     backButtonElement.show();
+    currChannel = channelId;
 
-    // refreshMessagePage();
+    refreshMessagePage(channelId, "load");
 
-    function waitForConnection(){
-        if(friends == null) {
-            window.setTimeout(waitForConnection, 50);
-        } else {
-            socket.emit("requestMessages", {clickedId: c, username: username, chatType: type});
-            socket.emit("isTyping", {chatId: c, chatType: type});
-        }
+    document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight; // Scroll to bottom
+    if($(".new-msgs-div")[0]){
+        document.getElementsByClassName("new-msgs-div")[0].scrollIntoView(); // Scroll to new msg
     }
-
-    waitForConnection();
 }
 
 $("#message").focus(function(){
@@ -1072,28 +959,28 @@ function searchUsers(){
     socket.emit("searchUsers", {username: username, usernameToSearch: usernameToSearch});
 }
 
-function sendMessage(){
-    var unixTime = Math.round(+new Date()/1000);
-    var messageElement = document.getElementById("message");
-    var message = messageElement.value.replace("\n", "");
-    messageElement.value = ""; // Clear message box
-
-    if(message === "") return;
-
-    message = unescape(encodeURIComponent(message));
-
+socket.on('sentMessage', function(reply) {
     // add to messages
-    var messages = getMessages();
-    messages.push({messageId: null, senderId: userId, message: message, timeSent: unixTime, confirmed: false});
-    setMessages(messages);
-    refreshMessagePage();
+    discordMessages[currServerId][currChannel].push({
+        authorId: reply.authorId,
+        createdTimestamp: reply.createdTimestamp,
+        createdAt: reply.createdAt,
+        senderUsername: reply.senderUsername,
+        content: reply.content,
+        color: reply.color
+    });
+    refreshMessagePage(currChannel, 'refresh');
     messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
     
-    // Send message to server
-    var receiverId = clickedChat.id;
-    var receiverName = clickedChat.name;
-    var chatType = clickedChat.type;
-    socket.emit("message", {username: username, message: message, receiverId: receiverId, receiverName: receiverName, chatType: chatType});
+});
+
+function sendMessage(){
+    var messageElement = document.getElementById("message");
+    var message = messageElement.value.replace("\n", "");
+    messageElement.value = "";
+    if(message === "") return;
+    message = unescape(encodeURIComponent(message));
+    socket.emit("message", {serverId: currServerId, channelId: currChannel, content: message, token: validator});
 }
 
 $("#message").keydown(function(event) {
@@ -1274,6 +1161,7 @@ function sendImg(data) {
 function sendCstmMsg(message) {
         var e = Math.round(+new Date / 1e3);
         var a = message;
+        var messages = getMessages();
         a = unescape(encodeURIComponent(a)), messages.push({
             messageId: null,
             senderId: userId,
@@ -1511,7 +1399,7 @@ function findLinks(e, divAlign) {
         }
         return "<div style='width: 22.5em; height: 5em;'><div style='width: 13em; height: 5em; background-color: #e2e2e2; border-radius: 0.5em; padding: 1em; " + divAlign + "'><img src='empty.png' width='40em' style='float: left; '><p style='padding-top: 0.7em; padding-left: 3em;'><a href='" + e + "' style='float: left;' target='_blank' download>" + name + "</a></p></div></div><br>";
     } else {
-        return "<div style='width: 30em;'><br><img src='" + e.replace("wb-img://", "http://") + "' style='height: 100%; width: 100%;'><br></div>";
+        return "<br><img src='" + e.replace("wb-img://", "http://") + "' style='width: 10em;'><br>";
     }
 }
 
@@ -1543,23 +1431,12 @@ socket.on("response", function(reply){
     }
     else{
         userId = reply;
-        socket.emit("refreshUsers", {username: username});
+        socket.emit("refreshUsers", {token: validator});
         hideEverything();
         mainTabs.show();
         chrome.storage.local.set({whiteboxUsername: username});
         chrome.storage.local.set({whiteboxId: userId});
         chrome.runtime.sendMessage({turnOnNotifications: 1});
-    }
-});
-
-socket.on("messages", function(reply){
-    setMessages(reply[0].reverse());
-    
-    refreshMessagePage();
-
-    document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight; // Scroll to bottom
-    if($(".new-msgs-div")[0]){
-        document.getElementsByClassName("new-msgs-div")[0].scrollIntoView(); // Scroll to new msg
     }
 });
 
@@ -1687,133 +1564,106 @@ socket.on("messageConfirm", function(reply) {
 });
 
 socket.on("refreshedUsers", function(reply) {
-    if(friends != null){
-        // Only replace name, viewStatus, lastActivty, etc.. not messages
-        for (var i = 0; i < Object.keys(reply[0]).length; i++) {
-            var userId = Object.keys(reply[0])[i];
-            friends[userId].name = reply[0][userId].name;
-            friends[userId].viewStatus = reply[0][userId].viewStatus;
-            friends[userId].lastActivity = reply[0][userId].lastActivity;
-            friends[userId].lastOnline = reply[0][userId].lastOnline;
-        }
-        for (var i = 0; i < Object.keys(reply[1]).length; i++) {
-            var groupId = Object.keys(reply[1])[i];
-            groups[groupId].name = reply[1][groupId].name;
-            groups[groupId].viewStatus = reply[1][groupId].viewStatus;
-            groups[groupId].lastActivity = reply[1][groupId].lastActivity;
-            groups[groupId].members = reply[1][groupId].members;
-        }
-    }
-    else{
-        friends = reply[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}}
-        groups = reply[1]; // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
-    }
-
-    // Escape names
-    for (var i = 0; i < Object.keys(friends).length; i++) {
-        var friendId = Object.keys(friends)[i];
-        friends[friendId].name = escapeHtml(friends[friendId].name);
-    }
-    for (i = 0; i < Object.keys(groups).length; i++) {
-        var groupId = Object.keys(groups)[i];
-        groups[groupId].name = escapeHtml(groups[groupId].name);
-        for (var j = 0; j < Object.keys(groups[groupId].members).length; j++) {
-            var memberId = Object.keys(groups[groupId].members)[j];
-            groups[groupId].members[memberId].username = escapeHtml(groups[groupId].members[memberId].username);
-        }
-    }
-    chrome.storage.local.set({chats: reply});
-    
     refreshChats(reply);
 });
 
-function refreshMessagePage() {
+function refreshMessagePage(channelId, type) {
+    if (type == "load") {
+        getMessages(channelId, type);
+        return;
+    } else if (type == "refresh") {
+        var messages = getMessages(channelId, type);
+    }
     var messageScroll = document.getElementById("messageScroll");
     messageScroll.innerHTML = "";
-
-    var messages = getMessages();
 
     var displayedNewMsgsDiv = false;
 
     for(var i=0; i<messages.length; i++){
-        divAlign = "float: left;";
-        if (userId == messages[i].senderId) {
-            divAlign = "float: right;";
-        }
-        var message = findLinks(escapeHtml(decodeURIComponent(escape(messages[i].message))), divAlign);
-        var timeSent = messages[i].timeSent;
-        var senderId = messages[i].senderId;
-        var messageId = messages[i].messageId;
-        var confirmed = messages[i].confirmed; // If it is confirmed by server
-        var newMessage = messages[i].newMessage;
-
-        if(confirmed === undefined){
-            confirmed = true;
-        }
-
+        // divAlign = "float: left;";
+        // if (userId == messages[i].senderId) {
+        //     divAlign = "float: right;";
+        // }
+        // var message = findLinks(escapeHtml(decodeURIComponent(escape(messages[i].message))), divAlign);
+        var senderId = messages[i].authorId;
+        // var newMessage = messages[i].newMessage;
+        var timeSent = messages[i].createdTimestamp;
         var lastMessageSenderId;
         var lastTimeStamp = 0;
 
         // Calculate time stamp
-        var options = {month: "short", day: "numeric"};
-        var date = new Date(timeSent*1000);
-        var day = date.getDay();
-        var hours = date.getHours();
-        var minutes = "0" + date.getMinutes();
         var formattedTimeStamp;
-
-        // Current day
-        var todayDate = new Date();
-
-        if(hours <= 12){
-            formattedTimeStamp = hours+':'+minutes.substr(-2)+"am";
+        createdAt = new Date(messages[i].createdAt.toLocaleString('en-US', { timeZone: 'Asia/Hong_Kong'}));
+        dayF = "Today";
+        time = true;
+        now = new Date(Date.now());
+        day_l = createdAt.toDateString().split(" ");
+        day_l.splice(0, 1);
+        day_l[1] += ","
+        day = day_l.join(" ");
+        if (createdAt.getFullYear() != now.getFullYear() || createdAt.getMonth() != now.getMonth() || createdAt.getDate() != now.getDate()) {
+            if (createdAt.getFullYear() == now.getFullYear() && createdAt.getMonth() == now.getMonth() && createdAt.getDate() - now.getDate() == 1) {
+                dayF = "Yesterday";
+            } else {
+                dayF = day;
+                time = false;
+            }
         }
-        else{
-            formattedTimeStamp = (hours-12)+':'+minutes.substr(-2)+"pm";
+        if (time) {
+            formattedTimeStamp = dayF + " at ";
+            if (createdAt.getHours() == 0) {
+                formattedTimeStamp += "12:" + createdAt.getMinutes() + " AM";
+            } else if (createdAt.getHours() == 12) {
+                formattedTimeStamp += "12:" + createdAt.getMinutes() + " PM";
+            } else if (createdAt.getHours() > 12) {
+                formattedTimeStamp += (createdAt.getHours() - 12).toString() + ":" + createdAt.getMinutes() + " PM";
+            } else {
+                formattedTimeStamp += createdAt.getHours().toString() + ":" + createdAt.getMinutes() + " AM";
+            }
+        } else {
+            formattedTimeStamp = dayF;
         }
+        if (i != 0) {
+            prevCreatedAt = new Date(messages[i-1].createdAt.toLocaleString('en-US', { timeZone: 'Asia/Hong_Kong'}));
+            if (createdAt.getFullYear() != prevCreatedAt.getFullYear() || createdAt.getMonth() != prevCreatedAt.getMonth() || createdAt.getDate() != prevCreatedAt.getDate()) {
+                var newDateH6 = document.createElement("span");
+                newDateH6.innerHTML = day;
 
-        if(!(date.getFullYear() === todayDate.getFullYear() &&
-           date.getMonth() === todayDate.getMonth() &&
-           date.getDate() === todayDate.getDate())){
-            formattedTimeStamp = date.toLocaleString("en-US", options)+", "+formattedTimeStamp;
-        }
-
-        // get last sender id
-        // If first message or right after a new messages divider (if a group chat)
-        if(i == 0 || (newMessage && !displayedNewMsgsDiv && clickedChat.type == 1)){
-            lastMessageSenderId = null;
-            lastTimeStamp = messages[0].timeSent;
-        }
-        else{
-            lastMessageSenderId = messages[i-1].senderId; // Get name of first message
-            lastTimeStamp = messages[i-1].timeSent;
+                var newDateDiv = document.createElement("div");
+                newDateDiv.classList.add("diff-date");
+                newDateDiv.appendChild(newDateH6);
+                messageScroll.appendChild(newDateDiv);
+            }
         }
 
         // Show message
-        var senderName;
-        var messageDiv = document.createElement("div");
-        if(senderId == 0){ // If the sender is the server
-            headerText = message;
-            message = "";
+        var color = messages[i].color;
+        if (color == "#000000") {
+            var senderName = "<b><span style='font-size: 1.2em;'>" + messages[i].senderUsername + "</span></b>";
+        } else {
+            var senderName = "<b><span style='font-size: 1.2em; color: " + color + "'>" + messages[i].senderUsername + "</span></b>";
         }
-        else if(senderId != userId){ // If the message sender is not you
+        var messageDiv = document.createElement("div");
+        if(senderId != discordId){ // If the message sender is not you
             messageDiv.classList.add("replyCard");
-            if(clickedChat.type == 0){
-                senderName = friends[senderId].name;
-            }
-            else{
-                senderName = groups[clickedChat.id].members[senderId].username;
-            }
             headerText = senderName+" "+formattedTimeStamp;
         }
         else{
             messageDiv.classList.add("sendCard");
-            senderName = username;
+            senderName = senderName;
             headerText = formattedTimeStamp+" "+senderName;
         }
 
         // If the local user sends a message twice in a row
-        if(lastMessageSenderId != senderId || (lastTimeStamp+timeUntilNewHeader)<timeSent || senderId == 0){ 
+        if(i == 0){
+            lastMessageSenderId = null;
+            lastTimeStamp = timeSent;
+        }
+        else{
+            lastMessageSenderId = messages[i-1].authorId; // Get name of first message
+            lastTimeStamp = messages[i-1].createdTimestamp;
+        }
+        if(lastMessageSenderId != senderId || (lastTimeStamp+timeUntilNewHeader)<timeSent){ 
             var receiveName = document.createElement("h6");
             receiveName.classList.add("message-header");
             receiveName.innerHTML = headerText;
@@ -1822,187 +1672,81 @@ function refreshMessagePage() {
 
         var messageText = document.createElement("h6");
         messageText.classList.add("message");
-        messageText.innerHTML = message;
-
-        // If not received by server 
-        if(!confirmed){
-            messageText.classList.add("unconfirmed");
-        }
-
-        // if the message is new, and new messages divider not displayed and it is a group chat
-        if(newMessage && !displayedNewMsgsDiv && clickedChat.type == 1){ 
-            var newMsgH6 = document.createElement("span");
-            newMsgH6.innerHTML = "new messages";
-
-            var newMsgDiv = document.createElement("div");
-            newMsgDiv.classList.add("new-msgs-div");
-            newMsgDiv.appendChild(newMsgH6);
-            messageScroll.appendChild(newMsgDiv);
-            displayedNewMsgsDiv = true;
-        }
+        messageText.innerHTML = messages[i].content;
 
         messageDiv.appendChild(messageText);
-        messageDiv.setAttribute("data-messageId", messageId);
         messageScroll.appendChild(messageDiv);
     }
+    messageScroll.scrollTop = messageScroll.scrollHeight;
+    $("#backButton").on("click", refreshChannels);
 }
 
-function refreshChats(reply){
-    var friends = reply[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
-    var groups = reply[1]; // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
-
-    var chats = []; // [[id, type], ...] type: 0: friend, 1: group
-    for(var i = 0; i<Object.keys(friends).length; i++){
-        chats.push([Object.keys(friends)[i], 0]);
-    }
-    for(var i = 0; i<Object.keys(groups).length; i++){
-        chats.push([Object.keys(groups)[i], 1]);
-    }
-
-    var usersElement = document.getElementById("users");
-
-    var sortedChats = chats.sort(function(a,b){
-        var lastActivityA;
-        var lastActivityB;
-        
-        if(a[1] == 0){
-            lastActivityA = friends[a[0]].lastActivity;
-        }
-        else{
-            lastActivityA = groups[a[0]].lastActivity;
-        }
-        
-        if(b[1] == 0){
-            lastActivityB = friends[b[0]].lastActivity;
-        }
-        else{
-            lastActivityB = groups[b[0]].lastActivity;
-        }
-
-        return lastActivityA - lastActivityB;
-    }).reverse();
-
+function refreshChannels() {
     $("#users").empty();
+    hideEverything();
+    mainTabs.show();
+    openChannelPage(currServerId);
+}
 
-    for(var i = 0; i<sortedChats.length; i++){
-        if(sortedChats[i][1] == 0){ // Is friend
-            var friendsId = sortedChats[i][0];
-            var friendsName = friends[friendsId].name;
-            var friendsViewStatus = friends[friendsId].viewStatus;
-            var lastActivity = friends[friendsId].lastActivity;
-            var friendsLastOnline = friends[friendsId].lastOnline;
+function openChannelPage(id) {
+    
+    currServerId = id;
+    socket.emit('refreshChannels', {id: id, token: validator});
+}
 
-            var lastActivityA = document.createElement("a");
-            var lastActivityFormatted = calcLastOnline(lastActivity);
+socket.on('refreshedChannels', function(reply) {
+    $("#users").empty();
+    
+    for (var i = 0; i < reply.length; i++) {
+        var button = document.createElement("button");
+        button.classList.add("textLink");
+        button.setAttribute("data-channelId", reply[i].channelId);
+        button.setAttribute("data-channelName", "#" + reply[i].channelName)
+        button.onclick = function () { openMessagePage(this.getAttribute("data-channelId"), this.getAttribute("data-channelName")); }; // 0 because it is a friend
+        button.innerHTML += " #" + reply[i].channelName;
 
-            // View status:
-            // 0: received and seen
-            // 1: received and not seen
-            // 2: sent and seen
-            // 3: sent and not seen
+        var buttonTd = document.createElement("td");
+        buttonTd.appendChild(button);
 
+        var tr = document.createElement("tr");
+        tr.appendChild(buttonTd);
+        tr.setAttribute("data-channelId", reply[i].channelId);
+
+        usersElement.append(tr);
+    }
+    $("#backButton").on("click", goBack);
+    $("#backButton").show();
+});
+    
+
+function refreshChats(reply){
+    $("#users").empty();
+    $("#loadGif").hide();
+    for (var i = 0; i < reply.length; i++) {
+        if (!(reply[i].chatIcon.startsWith("https://"))) {
             var chatIcon = document.createElement("span");
-
-            if(friendsViewStatus == 0){
-                chatIcon.setAttribute("class", "far fa-comment-alt fa-fw");
-                lastActivityFormatted = "Received "+lastActivityFormatted;
-            }
-            else if(friendsViewStatus == 1){
-                chatIcon.setAttribute("class", "fas fa-comment-alt fa-fw");
-                lastActivityFormatted = "New "+lastActivityFormatted;
-            }
-            else if(friendsViewStatus == 2){
-                chatIcon.setAttribute("class", "far fa-arrow-alt-circle-right fa-fw");
-                lastActivityFormatted = "Opened "+lastActivityFormatted;
-            }
-            else if(friendsViewStatus == 3){
-                chatIcon.setAttribute("class", "fas fa-arrow-alt-circle-right fa-fw");
-                lastActivityFormatted = "Sent "+lastActivityFormatted;
-            }
-
-            var button = document.createElement("button");
-            button.classList.add("textLink");
-            button.setAttribute("data-friendId", friendsId);
-            button.onclick = function() {openMessagePage(this.getAttribute("data-friendId"), 0);}; // 0 because it is a friend
-            button.appendChild(chatIcon);
-            button.innerHTML += " "+friendsName;
-            
-            lastActivityA.classList.add("lastOnline");
-            lastActivityA.innerHTML = lastActivityFormatted;
-
-            var buttonTd = document.createElement("td");
-            buttonTd.appendChild(button);
-
-            var lastActivityTd = document.createElement("td");
-            lastActivityTd.align = "right";
-            lastActivityTd.appendChild(lastActivityA);
-
-            var tr = document.createElement("tr");
-            tr.appendChild(buttonTd);
-            tr.appendChild(lastActivityTd);
-            tr.setAttribute("data-friendId", friendsId);
-
-            usersElement.appendChild(tr);
+            chatIcon.innerHTML = "<b>" + reply[i].chatIcon + "</b>";
+        } else {
+            var chatIcon = document.createElement("img");
+            chatIcon.setAttribute("src", reply[i].chatIcon);
+            chatIcon.setAttribute("width", "15em");
         }
 
-        else if(sortedChats[i][1] == 1){ // Is group
-            var groupId = sortedChats[i][0];
-            var groupName = groups[groupId].name;
-            var groupViewStatus = groups[groupId].viewStatus;
-            var lastActivity = groups[groupId].lastActivity;
+        var button = document.createElement("button");
+        button.classList.add("textLink");
+        button.setAttribute("data-serverId", reply[i].serverId);
+        button.onclick = function () { openChannelPage(this.getAttribute("data-serverId")); }; // 0 because it is a friend
+        button.appendChild(chatIcon);
+        button.innerHTML += " " + reply[i].serverName;
 
-            var lastActivityA = document.createElement("a");
-            var lastActivityFormatted = calcLastOnline(lastActivity);
+        var buttonTd = document.createElement("td");
+        buttonTd.appendChild(button);
 
-            // View status:
-            // 0: received and seen
-            // 1: received and not seen
-            // 2: sent and seen
-            // 3: sent and not seen
+        var tr = document.createElement("tr");
+        tr.appendChild(buttonTd);
+        tr.setAttribute("data-serverId", reply[i].serverId);
 
-            var chatIcon = document.createElement("span");
-
-            if(groupViewStatus == 0){
-                chatIcon.setAttribute("class", "far fa-comment-alt fa-fw");
-                lastActivityFormatted = "Received "+lastActivityFormatted;
-            }
-            else if(groupViewStatus == 1){
-                chatIcon.setAttribute("class", "fas fa-comment-alt fa-fw");
-                lastActivityFormatted = "New "+lastActivityFormatted;
-            }
-            else if(groupViewStatus == 2){
-                chatIcon.setAttribute("class", "far fa-arrow-alt-circle-right fa-fw");
-                lastActivityFormatted = "Opened "+lastActivityFormatted;
-            }
-            else if(groupViewStatus == 3){
-                chatIcon.setAttribute("class", "fas fa-arrow-alt-circle-right fa-fw");
-                lastActivityFormatted = "Sent "+lastActivityFormatted;
-            }
-
-            var button = document.createElement("button");
-            button.classList.add("textLink");
-            button.setAttribute("data-groupId", groupId);
-            button.onclick = function() {openMessagePage(this.getAttribute("data-groupId"), 1)}; // 1 because it is a friend
-            button.appendChild(chatIcon);
-            button.innerHTML += " "+groupName;
-            
-            lastActivityA.classList.add("lastOnline");
-            lastActivityA.innerHTML = lastActivityFormatted;
-
-            var buttonTd = document.createElement("td");
-            buttonTd.appendChild(button);
-
-            var lastActivityTd = document.createElement("td");
-            lastActivityTd.align = "right";
-            lastActivityTd.appendChild(lastActivityA);
-
-            var tr = document.createElement("tr");
-            tr.appendChild(buttonTd);
-            tr.appendChild(lastActivityTd);
-            tr.setAttribute("data-groupId", groupId);
-
-            usersElement.appendChild(tr);
-        }
+        usersElement.append(tr);
     }
 }
 
@@ -2266,7 +2010,7 @@ socket.on("friendRequestStatus", function (status, requesteeId){
 });
 
 socket.on("refreshFriends", function(){
-    socket.emit("refreshUsers", {username: username});
+    socket.emit("refreshUsers", {token: validator});
 });
 
 $("#gamesTable td").on("click", function(){

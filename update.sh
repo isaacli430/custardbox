@@ -1,3 +1,3 @@
 cd documents
-cd whitebox
-git pull http://github.com/kwugfighter/whitebox master
+cd custardbox
+git pull http://github.com/kwugfighter/custardbox master

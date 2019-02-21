@@ -1,4 +1,4 @@
-# Installing the WhiteBox Mod
+# Installing CustarBox
 
 1. Open up Terminal, and copy-paste the following code:
 
@@ -16,7 +16,7 @@ If it doesn't download, manually download Git [here](https://git-scm.com/downloa
 
 ```
 cd documents
-git clone http://github.com/kwugfighter/whitebox
+git clone http://github.com/kwugfighter/custardbox
 ```
 
 
@@ -32,5 +32,5 @@ git clone http://github.com/kwugfighter/whitebox
 
 Open a new Terminal window and copy-paste the following code:
 ```
-sh ~/documents/whitebox/update.sh
+sh ~/documents/custardbox/update.sh
 ```
