@@ -1236,112 +1236,28 @@ function findTag(message) {
 function formatText(message) {
     format_list = [
         {
-            "format": "{u}",
+            "format": "__",
             "result_b": '<span style="text-decoration: underline;">',
             "result_e": '</span>',
-            "length": 3,
+            "length": 2,
             "indices": []
         },
         {
-            "format": "{red}",
-            "result_b": '<span style="color: red">',
-            "result_e": '</span>',
-            "length": 5,
-            "indices": []
-        },
-        {
-            "format": "{blue}",
-            "result_b": '<span style="color: blue">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{purp}",
-            "result_b": '<span style="color: purple">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{brow}",
-            "result_b": '<span style="color: brown">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{oran}",
-            "result_b": '<span style="color: orange">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{gree}",
-            "result_b": '<span style="color: green">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{yell}",
-            "result_b": '<span style="color: yellow">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{blac}",
-            "result_b": '<span style="color: black">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{whit}",
-            "result_b": '<span style="color: white">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{gray}",
-            "result_b": '<span style="color: grey">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{grey}",
-            "result_b": '<span style="color: gray">',
-            "result_e": '</span>',
-            "length": 6,
-            "indices": []
-        },
-        {
-            "format": "{big}",
-            "result_b": '<span style="font-size: 6em;">',
-            "result_e": '</span>',
-            "length": 5,
-            "indices": []
-        },
-        {
-            "format": "{small}",
-            "result_b": '<span style="font-size: 0.5em;">',
-            "result_e": '</span>',
-            "length": 7,
-            "indices": []
-        },
-        {
-            "format": "*",
+            "format": "**",
             "result_b": '<b>',
             "result_e": '</b>',
-            "length": 1,
+            "length": 2,
             "indices": []
         },
         {
             "format": "_",
+            "result_b": '<i>',
+            "result_e": '</i>',
+            "length": 1,
+            "indices": []
+        },
+        {
+            "format": "*",
             "result_b": '<i>',
             "result_e": '</i>',
             "length": 1,
@@ -1672,7 +1588,7 @@ function refreshMessagePage(channelId, type) {
 
         var messageText = document.createElement("h6");
         messageText.classList.add("message");
-        messageText.innerHTML = messages[i].content;
+        messageText.innerHTML = formatText(messages[i].content);
 
         messageDiv.appendChild(messageText);
         messageScroll.appendChild(messageDiv);
