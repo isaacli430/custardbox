@@ -22,7 +22,6 @@ var validator;
 
 $("#backButton").on("click", goBack);
 $("#sendButton").on("click", sendMessage);
-$("#toggleBackgroundButton").on("click", toggleBackground);
 $("#setBackgroundOffsetsButton").on("click", setBackgroundOffsets);
 
 // Delete Account
@@ -528,46 +527,6 @@ function refreshBackground(){
     }
 }
 
-function toggleBackground(){
-    if(backgroundEnabled == true){
-        chrome.storage.local.set({backgroundEnabled: false});
-        backgroundEnabled = false;
-        refreshBackground();
-        xSlider.disabled = true;
-        ySlider.disabled = true;
-        $("#setBackgroundOffsetsButton").toggleClass("disabled", true);
-    }
-    else{
-        alert("Transparent background is in development and does not work well with high resolution displays. (Until I get a high resolution screen I cant really fix this)");
-        setLightTheme();
-        chrome.storage.local.set({backgroundEnabled: true});
-        backgroundEnabled = true;
-        refreshBackground();
-        xSlider.disabled = false;
-        ySlider.disabled = false;
-        $("#setBackgroundOffsetsButton").toggleClass("disabled", false);
-        chrome.storage.local.get(["backgroundXOffset"], function(result){
-            backgroundXOffset = result.backgroundXOffset;
-            chrome.storage.local.get(["backgroundYOffset"], function(result){
-                backgroundYOffset = result.backgroundYOffset;
-                chrome.tabs.captureVisibleTab(function (dataUrl){
-                    document.body.style.backgroundImage = "url("+dataUrl+")";
-
-                    var backgroundImage = new Image();
-                    backgroundImage.src = dataUrl;
-                    backgroundImage.onload = function() {
-                        backgroundWidth = parseInt(this.width);
-                        backgroundHeight = parseInt(this.height);
-                        document.body.style.backgroundPosition = backgroundXOffset+"px "+backgroundYOffset+"px";
-                        xSlider.value = (backgroundXOffset+backgroundWidth-100)%600;
-                        ySlider.value = (backgroundYOffset+300)%600;
-                    };
-                });
-            });
-        });
-    }
-}
-
 function changeBackgroundPos(){
     backgroundXOffset = parseInt(xSlider.value)-backgroundWidth+100;
     backgroundYOffset = parseInt(ySlider.value)-300;
@@ -830,10 +789,9 @@ $("#messageScroll").on('scroll', function() {
         $("#scrollDownBtn sup").hide();
     }
 
-    if(scrollTop <= messageBufferDistance && Object.keys(getMessages()).length != 0) {
-        var numOfMessages = Object.keys(getMessages()).length;
-        var chatType = clickedChat.type;
-        socket.emit("requestMessagesMore", {clickedId: clickedChat.id, username: username, startIndex: numOfMessages, chatType: chatType});
+    if(scrollTop <= messageBufferDistance && Object.keys(discordMessages[currServerId][currChannel]).length != 0) {
+        topMsg = discordMessages[currServerId][currChannel][0].id;
+        socket.emit("requestMessagesMore", {token: validator, serverId: currServerId, channelId: currChannel, topMsg: topMsg});
     }
 });
 
@@ -1356,12 +1314,12 @@ socket.on("response", function(reply){
 });
 
 socket.on("moreMessages", function(reply){
-    setMessages((reply[0].reverse()).concat(getMessages())); // [[12, "test", timestamp], [25, "oh hi", timestamp]]
+    discordMessages[currServerId][reply.channelId] = reply.messages.concat(discordMessages[currServerId][reply.channelId]); // [[12, "test", timestamp], [25, "oh hi", timestamp]]
 
     var scrollHeight = messageScroll.scrollHeight;
     var scrollLocation = $("#messageScroll").scrollTop();
 
-    refreshMessagePage();
+    refreshMessagePage(reply.channelId, "refresh");
 
     var newScrollHeight = messageScroll.scrollHeight;
     $("#messageScroll").scrollTop(newScrollHeight-scrollHeight+scrollLocation);
