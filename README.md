@@ -1,4 +1,4 @@
-# Installing CustarBox
+# Installing CustardBox
 
 1. Open up Terminal, and copy-paste the following code:
 
