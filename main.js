@@ -2,11 +2,10 @@
 //   / ___|   _ ___| |_ __ _ _ __ __| | __ )  _____  __
 //  | |  | | | / __| __/ _` | '__/ _` |  _ \ / _ \ \/ /
 //  | |__| |_| \__ \ || (_| | | | (_| | |_) | (_) >  < 
-//   \____\__,_|___/\__\__,_|_|  \__,_|____/ \___/_/\_\                                                 
+//   \____\__,_|___/\__\__,_|_|  \__,_|____/ \___/_/\_\      
+//                              -Inspired by WhiteBox
 
 (function() {              
-// var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.12/whitebox-websocket/socket.io"});
-// window.socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 window.socket = io.connect('http://128.199.103.165:8080'); 
 $("#files").on("change", handleFileSelect);
 $("#filePickerButton").click(function() {
