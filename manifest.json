@@ -1,12 +1,12 @@
 {
 	"manifest_version": 2,
-	"name": "WhiteBox",
+	"name": "CustardBox",
 	"version": "2.0.13",
-	"author": "Joshua Bird",
+	"author": "Isaac Li",
 	"browser_action": {
 		"default_popup": "main.html",
 		"default_icon": "chat-icon.png",
-		"default_title": "WhiteBox"
+		"default_title": "CustardBox"
 	},
 	"permissions": [
 		"cookies",
