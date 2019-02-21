@@ -21,7 +21,7 @@ git clone http://github.com/kwugfighter/custardbox
 
 
 
-3. Go to `chrome://extensions`, turn on `Developer Mode`, click on `Load Unpacked`, and find the folder named `whitebox`.
+3. Go to `chrome://extensions`, turn on `Developer Mode`, click on `Load Unpacked`, and find the folder named `custardbox`.
 
 ![Second Pic](https://i.imgur.com/NjIfMjL.png)
 
