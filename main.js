@@ -7,6 +7,7 @@
 
 (function() {              
 window.socket = io.connect('http://128.199.103.165:8080'); 
+// window.socket = io.connect('http://localhost:8080');
 $("#files").on("change", handleFileSelect);
 $("#filePickerButton").click(function() {
     $("#files").click();
@@ -23,6 +24,7 @@ var validator;
 $("#backButton").on("click", goBack);
 $("#sendButton").on("click", sendMessage);
 $("#setBackgroundOffsetsButton").on("click", setBackgroundOffsets);
+
 
 // Delete Account
 $("#deleteAccountButton").on("click", promptDeleteAccount);
@@ -172,7 +174,7 @@ function getMessages(channelId, type){
 socket.on('gotMessages', function(reply) {
     discordMessages[currServerId] = {};
     discordMessages[currServerId][reply.channelId] = reply.messages;
-    refreshMessagePage(reply.channelId, "refresh");
+    refreshMessagePage(reply.channelId, "refresh", reply.channelIds);
 });
 
 function hideEverything(){
@@ -464,6 +466,7 @@ function logout() {
 }
 
 $("#friends-tab").on('show.bs.tab', function(){
+    $("#loadGif").show();
     chrome.storage.local.get(["validator"], function(result) {
         socket.emit("refreshUsers", {token: result.validator});
     });
@@ -918,15 +921,8 @@ function searchUsers(){
 
 socket.on('sentMessage', function(reply) {
     // add to messages
-    discordMessages[currServerId][currChannel].push({
-        authorId: reply.authorId,
-        createdTimestamp: reply.createdTimestamp,
-        createdAt: reply.createdAt,
-        senderUsername: reply.senderUsername,
-        content: reply.content,
-        color: reply.color
-    });
-    refreshMessagePage(currChannel, 'refresh');
+    discordMessages[currServerId][currChannel].push(reply.messages);
+    refreshMessagePage(currChannel, 'refresh', reply.channelIds);
     messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
     
 });
@@ -1190,7 +1186,7 @@ function findTag(message) {
     }
     return message.join(" ");
 }
-function formatText(message) {
+function formatText(message, channelIds) {
     format_list = [
         {
             "format": "__",
@@ -1219,7 +1215,7 @@ function formatText(message) {
             "result_e": '</i>',
             "length": 1,
             "indices": []
-        },
+        }
     ]
     var msg_list = message.split(" ");
     message = "";
@@ -1251,6 +1247,34 @@ function formatText(message) {
         message = message.replace("/shrug", "");
         message = message + " \u{AF}\\_(\u{30C4})_/\u{AF}";
     }
+    message = message.replace(/\n/g, "<br>");
+
+    message = " " + message + " ";
+    message1 = message.split("<#");
+    if (message1.length > 1) {
+        message = message1.splice(0, 1);
+        for (var i = 0; i < message1.length; i++) {
+            message2 = message1[i].split(">");
+            if (message2.length == 1) {
+                message += message2[0];
+                continue;
+            }
+            remaining = message2[0];
+            if (remaining in channelIds) {
+                remaining = "<a href='#' class='roleLink' data-channelName='#" + channelIds[remaining] + "' data-channelId='" + remaining + "'>#" + channelIds[remaining] + "</a>";
+            } else {
+                remaining = "<a href='#'><#" + remaining + "></a>"
+            }
+            message2.splice(0, 1);
+            message += remaining + message2.join(">");
+        }
+    }
+
+
+
+    var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    var exp2 =/(^|[^\/])(www\.[\S]+(\b|$))/gim;
+    message = message.replace(exp, '<a href="$1" target="_blank">$1</a>').replace(exp2, '$1<a href="http://$2" target="_blank">$2</a>');
     message = message.trim();
     
     return message;
@@ -1261,7 +1285,6 @@ function findLinks(e, divAlign) {
     if (!e.startsWith("wb-img://") && !e.startsWith("wb-fle://")) {
         var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
         var exp2 =/(^|[^\/])(www\.[\S]+(\b|$))/gim;
-        e = formatText(e);
         e = e.replace(exp, '<a href="$1" target="_blank">$1</a>').replace(exp2, '$1<a href="http://$2" target="_blank">$2</a>')
         return findEmotes(e);
     } else if (e.startsWith("wb-fle://")) {
@@ -1319,7 +1342,7 @@ socket.on("moreMessages", function(reply){
     var scrollHeight = messageScroll.scrollHeight;
     var scrollLocation = $("#messageScroll").scrollTop();
 
-    refreshMessagePage(reply.channelId, "refresh");
+    refreshMessagePage(reply.channelId, "refresh", reply.channelIds);
 
     var newScrollHeight = messageScroll.scrollHeight;
     $("#messageScroll").scrollTop(newScrollHeight-scrollHeight+scrollLocation);
@@ -1417,30 +1440,11 @@ socket.on("updatedViewStatus", function(reply) {
     }
 });
 
-socket.on("messageConfirm", function(reply) {
-    var senderId = userId;
-    var message = reply.message;
-    var timeSent = Math.round(+new Date()/1000);
-    var lastMessageSenderId;
-    var lastTimeStamp = 0;
-
-    var messages = getMessages();
-    for (var i = 0; i < messages.length; i++) {
-        if(messages[i].confirmed != undefined && !messages[i].confirmed && message === messages[i].message){
-            messages[i].confirmed = true;
-            break;
-        }
-    }
-    setMessages(messages);
-
-    refreshMessagePage();
-});
-
 socket.on("refreshedUsers", function(reply) {
     refreshChats(reply);
 });
 
-function refreshMessagePage(channelId, type) {
+function refreshMessagePage(channelId, type, channelIds) {
     if (type == "load") {
         getMessages(channelId, type);
         return;
@@ -1543,15 +1547,16 @@ function refreshMessagePage(channelId, type) {
             messageDiv.appendChild(receiveName);
         }
 
-        var messageText = document.createElement("h6");
+        var messageText = document.createElement("p");
         messageText.classList.add("message");
-        messageText.innerHTML = formatText(messages[i].content);
+        messageText.innerHTML = formatText(messages[i].content, channelIds);
 
         messageDiv.appendChild(messageText);
         messageScroll.appendChild(messageDiv);
     }
     messageScroll.scrollTop = messageScroll.scrollHeight;
     $("#backButton").on("click", refreshChannels);
+    $(".roleLink").on("click", function () { openMessagePage($(this).attr('data-channelId'), $(this).attr('data-channelName')); })
 }
 
 function refreshChannels() {

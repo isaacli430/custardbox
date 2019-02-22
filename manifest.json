@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "CustardBox",
-	"version": "0.1.0a",
+	"version": "1.0.0",
 	"author": "Isaac Li",
 	"browser_action": {
 		"default_popup": "main.html",
