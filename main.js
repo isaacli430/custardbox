@@ -84,6 +84,7 @@ var backgroundYOffset;
 var backgroundEnabled;
 var currGlobalTheme;
 var currChannel;
+var channelIds;
 
 chrome.storage.local.get(["theme"], function(e) {
     currGlobalTheme = e.theme;
@@ -174,9 +175,10 @@ function getMessages(channelId, type){
 }
 
 socket.on('gotMessages', function(reply) {
+    channelIds = reply.channelIds;
     discordMessages[currServerId] = {};
     discordMessages[currServerId][reply.channelId] = reply.messages;
-    refreshMessagePage(reply.channelId, "refresh", reply.channelIds);
+    refreshMessagePage(reply.channelId, "refresh");
 });
 
 function hideEverything(){
@@ -924,17 +926,37 @@ function searchUsers(){
 socket.on('sentMessage', function(reply) {
     // add to messages
     discordMessages[currServerId][currChannel].push(reply.messages);
-    refreshMessagePage(currChannel, 'refresh', reply.channelIds);
+    refreshMessagePage(currChannel, 'refresh');
     messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
     
 });
+
+function swap(json){
+    var ret = {};
+    for(var key in json){
+      ret[json[key]] = key;
+    }
+    return ret;
+  }
+
+function formatTags(message) {
+    message = message.split(" ")
+    for (var i = 0; i < message.length; i++) {
+        if (message[i].startsWith("#")) {
+            if (message[i].replace("#", "") in swap(channelIds)) {
+                message[i] = "<#" + swap(channelIds)[message[i].replace("#", "")] + ">";
+            }
+        }
+    }
+    return message.join(" ");
+}
 
 function sendMessage(){
     var messageElement = document.getElementById("message");
     var message = messageElement.value.replace("\n", "");
     messageElement.value = "";
     if(message === "") return;
-    message = unescape(encodeURIComponent(message));
+    message = unescape(encodeURIComponent(formatTags(message)));
     socket.emit("message", {serverId: currServerId, channelId: currChannel, content: message, token: validator});
 }
 
@@ -1187,7 +1209,7 @@ function findTag(message) {
     }
     return message.join(" ");
 }
-function formatText(message, channelIds) {
+function formatText(message) {
     format_list = [
         {
             "format": "__",
@@ -1383,7 +1405,7 @@ socket.on("moreMessages", function(reply){
     var scrollHeight = messageScroll.scrollHeight;
     var scrollLocation = $("#messageScroll").scrollTop();
 
-    refreshMessagePage(reply.channelId, "refresh", reply.channelIds);
+    refreshMessagePage(reply.channelId, "refresh");
 
     var newScrollHeight = messageScroll.scrollHeight;
     $("#messageScroll").scrollTop(newScrollHeight-scrollHeight+scrollLocation);
@@ -1485,7 +1507,7 @@ socket.on("refreshedUsers", function(reply) {
     refreshChats(reply);
 });
 
-function refreshMessagePage(channelId, type, channelIds) {
+function refreshMessagePage(channelId, type) {
     if (type == "load") {
         getMessages(channelId, type);
         return;
