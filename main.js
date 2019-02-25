@@ -942,7 +942,7 @@
         socket.emit("searchUsers", { username: username, usernameToSearch: usernameToSearch });
     }
 
-    socket.on('sentMessage', function (reply) {
+    socket.on('sentMessage', function () {
         // add to messages
         refreshMessagePage(currChannel, 'refresh');
         messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
@@ -1462,12 +1462,16 @@
     });
 
     socket.on("newMessage", function (reply) {
-        if (currServerId == undefined) {
-            discordMessages[reply.userId].push(reply.message);
-            refreshMessagePage(reply.userId, "refresh");
+        if (reply.type == "dm") {
+            if (reply.userId == currChannel) {
+                discordMessages[reply.userId].push(reply.message);
+                refreshMessagePage(reply.userId, "refresh");
+            }
         } else {
-            discordMessages[currServerId][reply.channelId].push(reply.message);
-            refreshMessagePage(reply.channelId, "refresh");
+            if (reply.channelId == currChannel) {
+                discordMessages[currServerId][reply.channelId].push(reply.message);
+                refreshMessagePage(reply.channelId, "refresh");
+            }
         }
     });
 
