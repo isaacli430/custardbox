@@ -1567,14 +1567,19 @@
             }
             if (time) {
                 formattedTimeStamp = dayF + " at ";
-                if (createdAt.getHours() == 0) {
-                    formattedTimeStamp += "12:" + createdAt.getMinutes() + " AM";
-                } else if (createdAt.getHours() == 12) {
-                    formattedTimeStamp += "12:" + createdAt.getMinutes() + " PM";
-                } else if (createdAt.getHours() > 12) {
-                    formattedTimeStamp += (createdAt.getHours() - 12).toString() + ":" + createdAt.getMinutes() + " PM";
+                if (createdAt.getMinutes() == 0) {
+                    minF = "00";
                 } else {
-                    formattedTimeStamp += createdAt.getHours().toString() + ":" + createdAt.getMinutes() + " AM";
+                    minF = createdAt.getMinutes().toString();
+                }
+                if (createdAt.getHours() == 0) {
+                    formattedTimeStamp += "12:" + minF + " AM";
+                } else if (createdAt.getHours() == 12) {
+                    formattedTimeStamp += "12:" + minF + " PM";
+                } else if (createdAt.getHours() > 12) {
+                    formattedTimeStamp += (createdAt.getHours() - 12).toString() + ":" + minF + " PM";
+                } else {
+                    formattedTimeStamp += createdAt.getHours().toString() + ":" + minF + " AM";
                 }
             } else {
                 formattedTimeStamp = dayF;
