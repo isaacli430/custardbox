@@ -195,6 +195,7 @@
     });
 
     socket.on('gotDMs', function (reply) {
+        currChannelMembers = reply.members;
         discordMessages[reply.userId] = reply.messages;
         refreshMessagePage(reply.userId, "refresh");
     });
@@ -834,9 +835,6 @@
         messagePageElement.show();
         aboutButtonElement.show();
         backButtonElement.show();
-        if (currServerId == undefined) {
-            currTag = name;
-        }
         currChannel = channelId;
 
         refreshMessagePage(channelId, "load");
@@ -1329,8 +1327,10 @@
                     continue;
                 }
                 remaining = message2[0];
-                if (remaining in channelIds) {
-                    remaining = "<a href='#' class='roleLink' data-channelName='#" + channelIds[remaining] + "' data-channelId='" + remaining + "'>#" + channelIds[remaining] + "</a>";
+                if (channelIds != undefined) {
+                    if (remaining in channelIds) {
+                        remaining = "<a href='#' class='roleLink' data-channelName='#" + channelIds[remaining] + "' data-channelId='" + remaining + "'>#" + channelIds[remaining] + "</a>";
+                    }
                 } else {
                     remaining = "<a href='#'><#" + remaining + "></a>"
                 }
@@ -1618,7 +1618,6 @@
                 messageDiv.classList.add("sendCard");
                 headerText = formattedTimeStamp + " " + senderName;
             }
-
             // If the local user sends a message twice in a row
             if (i == 0) {
                 lastMessageSenderId = null;
