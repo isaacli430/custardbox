@@ -93,6 +93,8 @@ var xSlider = document.getElementById("xBackground");
 var ySlider = document.getElementById("yBackground");
 xSlider.onchange = changeBackgroundPos;
 ySlider.onchange = changeBackgroundPos;
+var currChannelMembers;
+
 
 setInterval(refreshBackground, 1000);
 setInterval(checkConnection, 5000);
@@ -973,13 +975,12 @@ $("#message")
         source: function(request, response) { 
             // If is a group chat and @ is present either at beginning of text or has a space before it
             // (so email@gmail.com doesnt trigger it)
-            if(clickedChat.type == 1 && (request.term.indexOf(" @") >= 0 || request.term.indexOf("@") == 0)){
-                var groupMembers = groups[clickedChat.id].members;
-                var groupMembersUsernames = ["everyone"];
-                for (var i = 0; i < Object.keys(groupMembers).length; i++) {
-                    var memberId = Object.keys(groupMembers)[i];
-                    groupMembersUsernames.push(groupMembers[memberId].username);
+            if((request.term.indexOf(" @") >= 0 || request.term.indexOf("@") == 0)){
+                currChannelMembersArray = [];
+                for (var i = 0; i < Object.values(currChannelMembers).length; i++) {
+                    currChannelMembersArray.push(Object.values(currChannelMembers)[i].tag);
                 }
+                var groupMembersUsernames = currChannelMembersArray.concat(["everyone", "here"]);
 
                 response($.ui.autocomplete.filter(groupMembersUsernames, extractLast(request.term)).slice(0,5));
             }
@@ -1270,7 +1271,47 @@ function formatText(message, channelIds) {
         }
     }
 
+    message = " " + message + " ";
+    message1 = message.split("<@!");
+    if (message1.length > 1) {
+        message = message1.splice(0, 1);
+        for (var i = 0; i < message1.length; i++) {
+            message2 = message1[i].split(">");
+            if (message2.length == 1) {
+                message += message2[0];
+                continue;
+            }
+            remaining = message2[0];
+            if (remaining in currChannelMembers) {
+                remaining = "<a href='#' data-userId='" + remaining + "'>@" + currChannelMembers[remaining].nick + "</a>";
+            } else {
+                remaining = "<a href='#'><@" + remaining + "></a>"
+            }
+            message2.splice(0, 1);
+            message += remaining + message2.join(">");
+        }
+    }
 
+    message = " " + message + " ";
+    message1 = message.split("<@");
+    if (message1.length > 1) {
+        message = message1.splice(0, 1);
+        for (var i = 0; i < message1.length; i++) {
+            message2 = message1[i].split(">");
+            if (message2.length == 1) {
+                message += message2[0];
+                continue;
+            }
+            remaining = message2[0];
+            if (remaining in currChannelMembers) {
+                remaining = "<a href='#' data-userId='" + remaining + "'>@" + currChannelMembers[remaining].name + "</a>";
+            } else {
+                remaining = "<a href='#'><@" + remaining + "></a>"
+            }
+            message2.splice(0, 1);
+            message += remaining + message2.join(">");
+        }
+    }
 
     var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
     var exp2 =/(^|[^\/])(www\.[\S]+(\b|$))/gim;
@@ -1457,13 +1498,7 @@ function refreshMessagePage(channelId, type, channelIds) {
     var displayedNewMsgsDiv = false;
 
     for(var i=0; i<messages.length; i++){
-        // divAlign = "float: left;";
-        // if (userId == messages[i].senderId) {
-        //     divAlign = "float: right;";
-        // }
-        // var message = findLinks(escapeHtml(decodeURIComponent(escape(messages[i].message))), divAlign);
         var senderId = messages[i].authorId;
-        // var newMessage = messages[i].newMessage;
         var timeSent = messages[i].createdTimestamp;
         var lastMessageSenderId;
         var lastTimeStamp = 0;
@@ -1549,7 +1584,16 @@ function refreshMessagePage(channelId, type, channelIds) {
 
         var messageText = document.createElement("p");
         messageText.classList.add("message");
-        messageText.innerHTML = formatText(messages[i].content, channelIds);
+
+        content = messages[i].content
+        .replace(/<span/g, "&lt;span")
+        .replace(/<\/span>/g, "&lt;/span&gt;")
+        .replace(/<p/g, "&lt;p")
+        .replace(/<\/p>/g, "&lt;/p&gt;")
+        .replace(/<h/g, "&lt;h")
+        .replace(/<\/h/g, "&lt;/h");
+
+        messageText.innerHTML = formatText(content, channelIds);
 
         messageDiv.appendChild(messageText);
         messageScroll.appendChild(messageDiv);
@@ -1566,29 +1610,29 @@ function refreshChannels() {
     openChannelPage(currServerId);
 }
 
-function openChannelPage(id) {
-    
+function openChannelPage(id) {    
     currServerId = id;
     socket.emit('refreshChannels', {id: id, token: validator});
 }
 
 socket.on('refreshedChannels', function(reply) {
     $("#users").empty();
+    currChannelMembers = reply.members;
     
-    for (var i = 0; i < reply.length; i++) {
+    for (var i = 0; i < reply.channels.length; i++) {
         var button = document.createElement("button");
         button.classList.add("textLink");
-        button.setAttribute("data-channelId", reply[i].channelId);
-        button.setAttribute("data-channelName", "#" + reply[i].channelName)
+        button.setAttribute("data-channelId", reply.channels[i].channelId);
+        button.setAttribute("data-channelName", "#" + reply.channels[i].channelName)
         button.onclick = function () { openMessagePage(this.getAttribute("data-channelId"), this.getAttribute("data-channelName")); }; // 0 because it is a friend
-        button.innerHTML += " #" + reply[i].channelName;
+        button.innerHTML += " #" + reply.channels[i].channelName;
 
         var buttonTd = document.createElement("td");
         buttonTd.appendChild(button);
 
         var tr = document.createElement("tr");
         tr.appendChild(buttonTd);
-        tr.setAttribute("data-channelId", reply[i].channelId);
+        tr.setAttribute("data-channelId", reply.channels[i].channelId);
 
         usersElement.append(tr);
     }
