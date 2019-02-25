@@ -937,7 +937,19 @@ function swap(json){
       ret[json[key]] = key;
     }
     return ret;
-  }
+}
+
+function reformatMembers(json) {
+    var ret = {};
+    for (var key in json) {
+        ret[json[key].tag] = {
+            name: json[key].name,
+            id: key,
+            nick: json[key].nick
+        }
+    }
+    return ret;
+}
 
 function formatTags(message) {
     message = message.split(" ")
@@ -946,7 +958,18 @@ function formatTags(message) {
             if (message[i].replace("#", "") in swap(channelIds)) {
                 message[i] = "<#" + swap(channelIds)[message[i].replace("#", "")] + ">";
             }
+        } else if (message[i].startsWith("@")) {
+            reformatted = reformatMembers(currChannelMembers);
+            msgSection = message[i].replace("@", "");
+            if (msgSection in reformatted) {
+                if (reformatted[msgSection].nick != undefined) {
+                    message[i] = "<@!" + reformatted[msgSection].id + ">";
+                } else {
+                    message[i] = "<@" + reformatted[msgSection].id + ">";
+                }
+            }
         }
+
     }
     return message.join(" ");
 }
