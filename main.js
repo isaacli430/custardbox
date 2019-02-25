@@ -1287,7 +1287,7 @@
         message = "";
         for (x = 0; x < msg_list.length; x++) {
             if (msg_list[x].startsWith("https://") || msg_list[x].startsWith("http://") || msg_list[x].startsWith("file://") || msg_list[x].startsWith("www.")) {
-                message += msg_list[x].replace("_", "\\chrescp\\_") + " ";
+                message += msg_list[x].replace(/_/g, "\\chrescp\\_") + " ";
             } else {
                 message += msg_list[x] + " ";
             }
@@ -1308,7 +1308,7 @@
                 format_list[x]['indices'].splice(0, 2);
             }
         }
-        message = message.replace("\\chrescp\\", "");
+        message = message.replace(/\\chrescp\\/g, "");
         if (message.startsWith("/shrug")) {
             message = message.replace("/shrug", "");
             message = message + " \u{AF}\\_(\u{30C4})_/\u{AF}";
