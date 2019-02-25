@@ -85,7 +85,6 @@
     var currGlobalTheme;
     var currChannel;
     var channelIds;
-    var currTag;
 
     chrome.storage.local.get(["theme"], function (e) {
         currGlobalTheme = e.theme;
@@ -836,9 +835,6 @@
         aboutButtonElement.show();
         backButtonElement.show();
         currChannel = channelId;
-        if (currServerId == undefined) {
-            currTag = name;
-        }
 
         refreshMessagePage(channelId, "load");
 
@@ -1602,9 +1598,9 @@
             if (senderId != discordId) { // If the message sender is not you
                 if (currServerId == undefined) {
                     if (color == "#000000") {
-                        var senderName = "<a href='#' class='dmLink' data-userId='" + senderId + "' data-userTag='" + currTag + "' style='font-size: 1.2em; color: inherit'><b>" + messages[i].senderUsername + "</span></b></a>";
+                        var senderName = "<b><span style='font-size: 1.2em;'>" + messages[i].senderUsername + "</span></b>";
                     } else {
-                        var senderName = "<a href='#' class='dmLink' data-userId='" + senderId + "' data-userTag='" + currTag + "' style='font-size: 1.2em; color: " + color + "'><b>" + messages[i].senderUsername + "</b></a>";
+                        var senderName = "<b><span style='font-size: 1.2em; color: " + color + "'>" + messages[i].senderUsername + "</span></b>";
                     }
                 } else {
                     if (color == "#000000") {
