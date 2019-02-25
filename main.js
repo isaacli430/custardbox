@@ -836,6 +836,9 @@
         aboutButtonElement.show();
         backButtonElement.show();
         currChannel = channelId;
+        if (currServerId == undefined) {
+            currTag = name;
+        }
 
         refreshMessagePage(channelId, "load");
 
