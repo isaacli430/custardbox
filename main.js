@@ -1237,20 +1237,14 @@
     }
     function findTag(message) {
         message = " " + message + " ";
-        if (message.includes(" @" + username + " ") || message.includes(" @everyone ")) {
+        if (message.includes("<a href='#' class='dmLink' data-userId='" + discordId + "'") || message.includes(" @everyone ")) {
             if ("light" === currGlobalTheme) {
                 message = "<div style='background-color: #ffc27f'>" + message + "</div>";
             } else {
                 message = "<div style='background-color: #91530f'>" + message + "</div>";
             }
         }
-        message = message.trim().split(" ");
-        for (i = 0; i < message.length; i++) {
-            if (message[i].startsWith("@") && message[i].length > 1) {
-                message[i] = "<a href='#'>" + message[i] + "</a>";
-            }
-        }
-        return message.join(" ");
+        return message;
     }
     function formatText(message) {
         format_list = [
@@ -1314,6 +1308,9 @@
             message = message + " \u{AF}\\_(\u{30C4})_/\u{AF}";
         }
         message = message.replace(/\n/g, "<br>");
+
+        message = findTag(message);
+        message = message.replace(/@everyone/g, "<a href='#'>@everyone</a>");
 
         message = " " + message + " ";
         message1 = message.split("<#");
@@ -1609,9 +1606,9 @@
                     }
                 } else {
                     if (color == "#000000") {
-                        var senderName = "<a href='#' class='dmLink' data-userId='" + senderId + "' data-userTag='" + currChannelMembers[senderId].tag + "' style='font-size: 1.2em; color: inherit'><b>" + messages[i].senderUsername + "</span></b></a>";
+                        var senderName = "<a href='#' class='dmLink' data-userId='" + senderId + "' data-userTag='" + messages[i].tag + "' style='font-size: 1.2em; color: inherit'><b>" + messages[i].senderUsername + "</span></b></a>";
                     } else {
-                        var senderName = "<a href='#' class='dmLink' data-userId='" + senderId + "' data-userTag='" + currChannelMembers[senderId].tag + "' style='font-size: 1.2em; color: " + color + "'><b>" + messages[i].senderUsername + "</b></a>";
+                        var senderName = "<a href='#' class='dmLink' data-userId='" + senderId + "' data-userTag='" + messages[i].tag + "' style='font-size: 1.2em; color: " + color + "'><b>" + messages[i].senderUsername + "</b></a>";
                     }
                 }
                 messageDiv.classList.add("replyCard");
