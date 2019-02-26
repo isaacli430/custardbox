@@ -1308,6 +1308,7 @@
             message = message + " \u{AF}\\_(\u{30C4})_/\u{AF}";
         }
         message = message.replace(/\n/g, "<br>");
+        message = message.replace(/\\_/g, "_");
 
         message = findTag(message);
         message = message.replace(/@everyone/g, "<a href='#'>@everyone</a>");
