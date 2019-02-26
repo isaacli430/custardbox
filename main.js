@@ -993,7 +993,7 @@
 
     function sendMessage() {
         var messageElement = document.getElementById("message");
-        var message = messageElement.value.replace("\n", "");
+        var message = messageElement.value;
         messageElement.value = "";
         if (message === "") return;
         message = unescape(encodeURIComponent(formatTags(message)));
@@ -1005,7 +1005,7 @@
     }
 
     $("#message").keydown(function (event) {
-        if (event.keyCode === 13) {
+        if (event.keyCode === 13 && !event.shiftKey) {
             event.preventDefault();
             if ($("#message").autocomplete("widget")[0].style.display === "none") { // If autocomplete is not open
                 $("#sendButton").click();
