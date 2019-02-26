@@ -1567,8 +1567,8 @@
             }
             if (time) {
                 formattedTimeStamp = dayF + " at ";
-                if (createdAt.getMinutes() == 0) {
-                    minF = "00";
+                if (createdAt.getMinutes() < 10) {
+                    minF = "0" + createdAt.getMinutes().toString();
                 } else {
                     minF = createdAt.getMinutes().toString();
                 }
