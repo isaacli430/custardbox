@@ -1281,14 +1281,14 @@
         message = "";
         for (x = 0; x < msg_list.length; x++) {
             if (msg_list[x].startsWith("https://") || msg_list[x].startsWith("http://") || msg_list[x].startsWith("file://") || msg_list[x].startsWith("www.")) {
-                message += msg_list[x].replace(/_/g, "\\chrescp\\_") + " ";
+                message += msg_list[x].replace(/_/g, "\\_") + " ";
             } else {
                 message += msg_list[x] + " ";
             }
         }
         for (x = 0; x < format_list.length; x++) {
             for (i = 0; i <= message.length - format_list[x]['length']; i++) {
-                if (message.substring(i, i + format_list[x]['length']) == format_list[x]['format'] && message.substring(i - 9, i) != "\\chrescp\\") {
+                if (message.substring(i, i + format_list[x]['length']) == format_list[x]['format'] && message.substring(i - 1, i) != "\\") {
                     format_list[x]['indices'].push(i);
                 }
             }
@@ -1302,13 +1302,12 @@
                 format_list[x]['indices'].splice(0, 2);
             }
         }
-        message = message.replace(/\\chrescp\\/g, "");
+        message = message.replace(/\\_/g, "_");
         if (message.startsWith("/shrug")) {
             message = message.replace("/shrug", "");
             message = message + " \u{AF}\\_(\u{30C4})_/\u{AF}";
         }
         message = message.replace(/\n/g, "<br>");
-        message = message.replace(/\\_/g, "_");
 
         message = findTag(message);
         message = message.replace(/@everyone/g, "<a href='#'>@everyone</a>");
