@@ -1747,7 +1747,7 @@
 
         usersElement.append(tr);
         for (var i = 0; i < reply.length; i++) {
-            if (!(reply[i].chatIcon.startsWith("https://"))) {
+            if (!(reply[i].chatIcon.startsWith("http://"))) {
                 var chatIcon = document.createElement("span");
                 chatIcon.innerHTML = "<b>" + reply[i].chatIcon + "</b>";
             } else {
