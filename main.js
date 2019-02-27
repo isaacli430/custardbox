@@ -24,6 +24,8 @@
     $("#backButton").on("click", goBack);
     $("#sendButton").on("click", sendMessage);
     $("#setBackgroundOffsetsButton").on("click", setBackgroundOffsets);
+    $(document).on('DOMNodeInserted', '.replyCard', function() {setTimeout(scrollDown, 500)});
+    $(document).on('DOMNodeInserted', '.sendCard', function() {setTimeout(scrollDown, 500)});
 
 
     // Delete Account
@@ -49,7 +51,6 @@
 
     // Scroll down btn
     $("#scrollDownBtn").on("click", scrollDown);
-
     $("#unfriendFriendBtn").on("click", unfriendFriend);
     $("#lightThemeBtn").on("click", setLightTheme);
     $("#darkThemeBtn").on("click", setDarkTheme);
@@ -821,7 +822,7 @@
     });
 
     function scrollDown() {
-        document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight; // Scroll to bottom
+        document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight+10000; // Scroll to bottom
     }
 
     function openMessagePage(channelId, name) {
@@ -940,13 +941,6 @@
 
         socket.emit("searchUsers", { username: username, usernameToSearch: usernameToSearch });
     }
-
-    socket.on('sentMessage', function () {
-        // add to messages
-        refreshMessagePage(currChannel, 'refresh');
-        messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
-
-    });
 
     function swap(json) {
         var ret = {};
@@ -1113,15 +1107,21 @@
         }
     }
 
-    function handleFileSelect(evt) {
+    function handleFileSelect() {
         var $files = $(this).get(0).files;
-        var formData = new FormData();
-        if ($files[0].type == "image/jpeg" || $files[0].type == "image/png" || $files[0].type == "image/gif" || $files[0].type == "image/tiff") {
-            formData.append("image", $files[0]);
-            sendImg(formData);
+        if ($files[0].size > 6000000) {
+            $("#alertMsg").text("Maximum file size is 6MB");
+            $("#alertModal").modal("show");
+            return;
+        }
+        var messageElement = document.getElementById("message");
+        var message = messageElement.value;
+        messageElement.value = "";
+        message = unescape(encodeURIComponent(formatTags(message)));
+        if (currServerId == undefined) {
+            socket.emit('upload', { userId: currChannel, content: message, token: validator, type: "dmMessage", file: $files[0], name: $files[0].name });
         } else {
-            formData.append("file", $files[0]);
-            sendFile(formData);
+            socket.emit('upload', { serverId: currServerId, channelId: currChannel, content: message, token: validator, type: "message", file: $files[0], name: $files[0].name });
         }
     }
 
@@ -1457,15 +1457,31 @@
     });
 
     socket.on("newMessage", function (reply) {
-        if (reply.type == "dm") {
-            if (reply.userId == currChannel) {
-                discordMessages[reply.userId].push(reply.message);
-                refreshMessagePage(reply.userId, "refresh");
-            }
+        if (reply.message.attachments != []) {
+            setTimeout(function() {
+                if (reply.type == "dm") {
+                    if (reply.userId == currChannel) {
+                        discordMessages[reply.userId].push(reply.message);
+                        refreshMessagePage(reply.userId, "refresh");
+                    }
+                } else {
+                    if (reply.channelId == currChannel) {
+                        discordMessages[currServerId][reply.channelId].push(reply.message);
+                        refreshMessagePage(reply.channelId, "refresh");
+                    }
+                }
+            }, 1000);
         } else {
-            if (reply.channelId == currChannel) {
-                discordMessages[currServerId][reply.channelId].push(reply.message);
-                refreshMessagePage(reply.channelId, "refresh");
+            if (reply.type == "dm") {
+                if (reply.userId == currChannel) {
+                    discordMessages[reply.userId].push(reply.message);
+                    refreshMessagePage(reply.userId, "refresh");
+                }
+            } else {
+                if (reply.channelId == currChannel) {
+                    discordMessages[currServerId][reply.channelId].push(reply.message);
+                    refreshMessagePage(reply.channelId, "refresh");
+                }
             }
         }
     });
@@ -1597,6 +1613,7 @@
             var color = messages[i].color;
             var messageDiv = document.createElement("div");
             if (senderId != discordId) { // If the message sender is not you
+                var divAlign = "float: left;";
                 if (currServerId == undefined) {
                     if (color == "#000000") {
                         var senderName = "<b><span style='font-size: 1.2em;'>" + messages[i].senderUsername + "</span></b>";
@@ -1614,6 +1631,7 @@
                 headerText = senderName + " " + formattedTimeStamp;
             }
             else {
+                var divAlign = "float: right;";
                 if (color == "#000000") {
                     var senderName = "<b><span style='font-size: 1.2em;'>" + messages[i].senderUsername + "</span></b>";
                 } else {
@@ -1649,12 +1667,27 @@
                 .replace(/<h/g, "&lt;h")
                 .replace(/<\/h/g, "&lt;/h");
 
-            messageText.innerHTML = formatText(content);
+            content = formatText(content);
+            if (messages[i].attachments.length > 0) {
+                for (var x = 0; x < messages[i].attachments.length; x++) {
+                    if (messages[i].attachments[x].endsWith(".png") || messages[i].attachments[x].endsWith(".jpg") || messages[i].attachments[x].endsWith(".gif")) {
+                        content += "<br><img src='" + messages[i].attachments[x] + "' width='200em'>";
+                    } else {
+                        if (messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length-1].length > 15) {
+                            name = messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length-1].substring(0, 12) + "..."
+                        } else {
+                            name = messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length-1];
+                        }
+                        content += "<br><div style='width: 22.5em; height: 5em;'><div style='width: 13em; height: 5em; background-color: #e2e2e2; border-radius: 0.5em; padding: 1em; " + divAlign + "'><img src='empty.png' width='40em' style='float: left; '><p style='padding-top: 0.7em; padding-left: 3em;'><a href='" + messages[i].attachments[x] + "' style='float: left;' target='_blank' download>" + name + "</a></p></div></div><br>";
+                    }
+                }
+            }
+            messageText.innerHTML = content;
 
             messageDiv.appendChild(messageText);
             messageScroll.appendChild(messageDiv);
         }
-        messageScroll.scrollTop = messageScroll.scrollHeight;
+
         $("#backButton").on("click", refreshChannels);
         $(".roleLink").on("click", function () { openMessagePage($(this).attr('data-channelId'), $(this).attr('data-channelName')); });
         $(".dmLink").on("click", function () { openMessagePage($(this).attr('data-userId'), $(this).attr('data-userTag')); });
