@@ -24,8 +24,14 @@
     $("#backButton").on("click", goBack);
     $("#sendButton").on("click", sendMessage);
     $("#setBackgroundOffsetsButton").on("click", setBackgroundOffsets);
-    $(document).on('DOMNodeInserted', '.replyCard', function() {setTimeout(scrollDown, 500)});
-    $(document).on('DOMNodeInserted', '.sendCard', function() {setTimeout(scrollDown, 500)});
+    $(document).on('DOMNodeInserted', '.replyCard', function() {
+        scrollDown();
+        setTimeout(scrollDown, 200);
+    });
+    $(document).on('DOMNodeInserted', '.sendCard', function() {
+        scrollDown();
+        setTimeout(scrollDown, 200);
+    });
 
 
     // Delete Account
@@ -1123,81 +1129,6 @@
         } else {
             socket.emit('upload', { serverId: currServerId, channelId: currChannel, content: message, token: validator, type: "message", file: $files[0], name: $files[0].name });
         }
-    }
-
-    function sendFile(data) {
-        var settings = {
-            async: false,
-            crossDomain: true,
-            processData: false,
-            contentType: false,
-            type: 'POST',
-            url: 'https://bayfiles.com/api/upload',
-            mimeType: 'multipart/form-data'
-        };
-        settings.data = data;
-        $.ajax(settings).done(function (response) {
-            var data = JSON.parse(response);
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = process;
-            xhr.open("GET", data.data.file.url.short + "/" + data.data.file.metadata.name, true);
-            xhr.send();
-            function process() {
-                if (xhr.readyState == 4) {
-
-                    // resp now has the text and you can process it.
-                    // var url1 = xhr.responseText.split('id="download-url"\n                   class="btn btn-primary btn-block"\n                   href="')[1];
-                    var url1 = xhr.responseText.split('id="download-url"')[1];
-                    var url2 = url1.split('href="')[1];
-                    var url = url2.split('">')[0];
-                    sendCstmMsg("wb-fle://" + url.replace("https://", ""));
-                }
-            }
-        });
-    }
-
-    function sendImg(data) {
-        var settings = {
-            async: false,
-            crossDomain: true,
-            processData: false,
-            contentType: false,
-            type: 'POST',
-            url: 'https://api.imgur.com/3/image',
-            headers: {
-                Authorization: "Client-ID 86dea04cb4927c2",
-                Accept: 'application/json'
-            },
-            mimeType: 'multipart/form-data'
-        };
-        settings.data = data;
-        $.ajax(settings).done(function (response) {
-            var data = JSON.parse(response);
-            sendCstmMsg("wb-img://" + data.data.link.replace("https://", ""));
-        });
-    }
-
-    function sendCstmMsg(message) {
-        var e = Math.round(+new Date / 1e3);
-        var a = message;
-        var messages = getMessages();
-        a = unescape(encodeURIComponent(a)), messages.push({
-            messageId: null,
-            senderId: userId,
-            message: a,
-            timeSent: e,
-            confirmed: !1
-        }), refreshMessagePage(), messageScroll.scrollTop = messageScroll.scrollHeight;
-        var n = clickedChat.id,
-            r = clickedChat.name,
-            o = clickedChat.type;
-        socket.emit("message", {
-            username: username,
-            message: a,
-            receiverId: n,
-            receiverName: r,
-            chatType: o
-        })
     }
 
     function findEmotes(message) {
