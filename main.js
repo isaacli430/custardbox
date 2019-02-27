@@ -1236,7 +1236,7 @@
 
     }
     function findTag(message) {
-        if (message.includes("<a href='#' class='dmLink' data-userId='" + discordId + "'") || message.includes("@everyone")) {
+        if (message.includes("<@" + discordId + ">") || message.includes("@everyone") || message.includes("<@!" + discordId + ">")) {
             if ("light" === currGlobalTheme) {
                 message = "<div style='background-color: #ffc27f'>" + message + "</div>";
             } else {
