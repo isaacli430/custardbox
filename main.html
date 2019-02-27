@@ -24,14 +24,6 @@
 						</a>
 					</li>
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle py-1" id="add-dropdown" data-toggle="dropdown" href="#add" role="button">
-							<span class="far fa-plus-square"></span></a>
-						<div class="dropdown-menu">
-							<a class="dropdown-item dropdown-text" id="add-friends-tab" data-toggle="tab" href="#add-friends" role="tab">Add Friends</a>
-							<a class="dropdown-item dropdown-text" id="make-group-tab" data-toggle="tab" href="#make-group" role="tab">Make Group</a>
-						</div>
-					</li>
-					<li class="nav-item dropdown">
 						<a class="nav-link py-1" id="games-tab" data-toggle="tab" href="#games" role="tab">
 							<span class="fas fa-gamepad"></span></a>
 						</a>
@@ -41,8 +33,6 @@
 							<span class="fas fa-ellipsis-h"></span>
 						</a>
 						<div class="dropdown-menu">
-							<a class="dropdown-item dropdown-text" id="friend-requests-tab" data-toggle="tab" href="#friend-requests" role="tab">Friend Requests</a>
-							<a class="dropdown-item dropdown-text" id="sent-friend-requests-tab" data-toggle="tab" href="#sent-friend-requests" role="tab">Sent Friend Requests</a>
 							<a class="dropdown-item dropdown-text" id="settings-tab" data-toggle="tab" href="#settings" role="tab">Settings</a>
 							<a class="dropdown-item dropdown-text" data-toggle="tab" href="#about" role="tab">About</a>
 						</div>
@@ -75,19 +65,17 @@
 							<div style="overflow-y: scroll; height:300px;" class="col-12">
 								<table class="table table-sm outputTable">
 									<thead>
-										<tr>
 											<th>
 												<div class="row">
 													<div class="col-8">
-													<input type="text" class="form-control form-control-sm" autocomplete="off" id="userSearchInput" placeholder="Username">
+													<input type="text" class="form-control form-control-sm" autocomplete="off" id="userSearchInput" placeholder="Friend ID">
 													</div>
 													<div class="col-4">
 														<a class="btn btn-outline-dark btn-sm" id="userSearchBtn">Search</a>
 													</div>
 												</div>
+												<p style="padding-left: 0.1em;" id="selfDiscordId"></p>
 											</th>
-											<th class="text" style="text-align: right; font-size: 12px;">Last Online</th>
-										</tr>
 									</thead>
 									<tbody id="matchingUsers">
 									</tbody>
@@ -251,7 +239,6 @@
 							<div class="col-12">
 								<small class="text">
 									Created by Isaac Li
-									Inspired by WhiteBox
 								</small>
 								<br><br>
 								<small class="text" id="aboutPageSoftwareVersion">
@@ -783,5 +770,4 @@
 	<!-- Development Files Start -->
 	<script type="text/javascript" src="main.js"></script>
 	<!-- Development Files End -->
-	<script type="text/javascript" src="whitebox.min.js"></script>
 </html>

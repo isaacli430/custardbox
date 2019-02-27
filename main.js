@@ -24,11 +24,11 @@
     $("#backButton").on("click", goBack);
     $("#sendButton").on("click", sendMessage);
     $("#setBackgroundOffsetsButton").on("click", setBackgroundOffsets);
-    $(document).on('DOMNodeInserted', '.replyCard', function() {
+    $(document).on('DOMNodeInserted', '.replyCard', function () {
         scrollDown();
         setTimeout(scrollDown, 200);
     });
-    $(document).on('DOMNodeInserted', '.sendCard', function() {
+    $(document).on('DOMNodeInserted', '.sendCard', function () {
         scrollDown();
         setTimeout(scrollDown, 200);
     });
@@ -495,20 +495,8 @@
         });
     });
 
-    $("#friend-requests-tab").on('show.bs.tab', function () {
-        socket.emit("pendingFriendRequests", { username: username });
-    });
-
-    $("#sent-friend-requests-tab").on('show.bs.tab', function () {
-        socket.emit("sentFriendRequests", { username: username });
-    });
-
     $("#settings-tab").on('show.bs.tab', function () {
         refreshSettingsPage();
-    });
-
-    $("#add-friends-tab").on('show.bs.tab', function () {
-        socket.emit("searchUsers", { username: username, usernameToSearch: "" });
     });
 
     function refreshSettingsPage() {
@@ -828,7 +816,7 @@
     });
 
     function scrollDown() {
-        document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight+10000; // Scroll to bottom
+        document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight + 10000; // Scroll to bottom
     }
 
     function openMessagePage(channelId, name) {
@@ -1389,7 +1377,7 @@
 
     socket.on("newMessage", function (reply) {
         if (reply.message.attachments != []) {
-            setTimeout(function() {
+            setTimeout(function () {
                 if (reply.type == "dm") {
                     if (reply.userId == currChannel) {
                         discordMessages[reply.userId].push(reply.message);
@@ -1604,10 +1592,10 @@
                     if (messages[i].attachments[x].endsWith(".png") || messages[i].attachments[x].endsWith(".jpg") || messages[i].attachments[x].endsWith(".gif")) {
                         content += "<br><img src='" + messages[i].attachments[x] + "' width='200em'>";
                     } else {
-                        if (messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length-1].length > 15) {
-                            name = messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length-1].substring(0, 12) + "..."
+                        if (messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length - 1].length > 15) {
+                            name = messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length - 1].substring(0, 12) + "..."
                         } else {
-                            name = messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length-1];
+                            name = messages[i].attachments[x].split("/")[messages[i].attachments[x].split("/").length - 1];
                         }
                         content += "<br><div style='width: 22.5em; height: 5em;'><div style='width: 13em; height: 5em; background-color: #e2e2e2; border-radius: 0.5em; padding: 1em; " + divAlign + "'><img src='empty.png' width='40em' style='float: left; '><p style='padding-top: 0.7em; padding-left: 3em;'><a href='" + messages[i].attachments[x] + "' style='float: left;' target='_blank' download>" + name + "</a></p></div></div><br>";
                     }
@@ -1637,7 +1625,7 @@
     }
 
     function openFriendsPage() {
-        socket.emit('refreshFriends', {token: validator});
+        socket.emit('refreshFriends', { token: validator });
     }
 
     socket.on('refreshedChannels', function (reply) {
@@ -1822,49 +1810,37 @@
     });
 
     socket.on("searchUsersReply", function (reply) {
-        var matchingUsers = reply; //{userId: [name, lastOnline]}
         $("#matchingUsers").empty();
 
         // Sort by num of mutual friends
-        var sortedUsers = Object.keys(matchingUsers).sort(function (a, b) {
-            return matchingUsers[b][2] - matchingUsers[a][2];
-        });
+        var matchingUserId = reply.userId;
+        var matchingUserName = reply.tag;
+        var usersElement = document.getElementById("matchingUsers");
 
-        for (var i = 0; i < sortedUsers.length; i++) {
-            var matchingUserId = sortedUsers[i];
-            var matchingUserName = escapeHtml(matchingUsers[matchingUserId][0]);
-            var matchingUserLastOnline = matchingUsers[matchingUserId][1];
-            var usersElement = document.getElementById("matchingUsers");
+        var button = document.createElement("button");
+        button.classList.add("textLink");
+        button.id = matchingUserId;
+        button.onclick = function () { friendRequest(this.id); };
+        button.innerHTML = '<span class="far fa-plus-square fa-fw" data-matchingUserId="' + matchingUserId + '""></span> ' + matchingUserName;
 
-            if ((friends != undefined && matchingUserId in friends) || matchingUserId == userId) {
-                continue; // Already friends
-            }
+        var lastOnline = document.createElement("a");
+        var lastOnlineValue = calcLastOnline(matchingUserLastOnline);
 
-            var button = document.createElement("button");
-            button.classList.add("textLink");
-            button.id = matchingUserId;
-            button.onclick = function () { friendRequest(this.id); };
-            button.innerHTML = '<span class="far fa-plus-square fa-fw" data-matchingUserId="' + matchingUserId + '""></span> ' + matchingUserName;
+        lastOnline.classList.add("lastOnline");
+        lastOnline.innerHTML = lastOnlineValue;
 
-            var lastOnline = document.createElement("a");
-            var lastOnlineValue = calcLastOnline(matchingUserLastOnline);
+        var buttonTd = document.createElement("td");
+        buttonTd.appendChild(button);
 
-            lastOnline.classList.add("lastOnline");
-            lastOnline.innerHTML = lastOnlineValue;
+        var lastOnlineTd = document.createElement("td");
+        lastOnlineTd.align = "right";
+        lastOnlineTd.appendChild(lastOnline);
 
-            var buttonTd = document.createElement("td");
-            buttonTd.appendChild(button);
+        var tr = document.createElement("tr");
+        tr.appendChild(buttonTd);
+        tr.appendChild(lastOnlineTd);
 
-            var lastOnlineTd = document.createElement("td");
-            lastOnlineTd.align = "right";
-            lastOnlineTd.appendChild(lastOnline);
-
-            var tr = document.createElement("tr");
-            tr.appendChild(buttonTd);
-            tr.appendChild(lastOnlineTd);
-
-            usersElement.appendChild(tr);
-        }
+        usersElement.appendChild(tr);
     });
 
     socket.on("friendRequests", function (reply) {
@@ -2112,120 +2088,6 @@
         var value = $(this).val().toLowerCase();
         $(this).closest("table").find("tbody > tr").filter(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-        });
-    });
-
-    $("#make-group-tab").on('show.bs.tab', function () {
-        chrome.storage.local.get(["chats"], function (result) {
-            var friends = result.chats[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
-            var groups = result.chats[1]; // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
-
-            var chats = [];// [[id, type], ...] type: 0: friend, 1: group
-            for (var i = 0; i < Object.keys(friends).length; i++) {
-                chats.push([Object.keys(friends)[i], 0]);
-            }
-            for (var i = 0; i < Object.keys(groups).length; i++) {
-                chats.push([Object.keys(groups)[i], 1]);
-            }
-
-            var sortedChats = chats.sort(function (a, b) {
-                var lastActivityA;
-                var lastActivityB;
-
-                if (a[1] == 0) {
-                    lastActivityA = friends[a[0]].lastActivity;
-                }
-                else {
-                    lastActivityA = groups[a[0]].lastActivity;
-                }
-
-                if (b[1] == 0) {
-                    lastActivityB = friends[b[0]].lastActivity;
-                }
-                else {
-                    lastActivityB = groups[b[0]].lastActivity;
-                }
-
-                return lastActivityA - lastActivityB;
-            }).reverse();
-
-            $("#makeGroupTable").empty();
-
-            for (var i = 0; i < sortedChats.length; i++) {
-                if (sortedChats[i][1] == 0) { // Is friend
-                    var friendsId = sortedChats[i][0];
-                    var friendsName = friends[friendsId].name;
-                    var friendsViewStatus = friends[friendsId].viewStatus;
-                    var lastActivity = friends[friendsId].lastActivity;
-                    var friendsLastOnline = friends[friendsId].lastOnline;
-
-                    var lastActivityA = document.createElement("a");
-                    var lastActivityFormatted = calcLastOnline(lastActivity);
-
-                    var chatIcon = document.createElement("i");
-                    chatIcon.setAttribute("class", "far fa-plus-square fa-fw");
-
-                    var button = document.createElement("button");
-                    button.classList.add("textLink");
-                    button.setAttribute("data-friendId", friendsId);
-                    button.onclick = function () { makeGroupNewFriend(this.getAttribute("data-friendId")); };
-                    button.appendChild(chatIcon);
-                    button.innerHTML += " " + friendsName;
-
-                    var buttonTd = document.createElement("td");
-                    buttonTd.appendChild(button);
-
-                    var tr = document.createElement("tr");
-                    tr.appendChild(buttonTd);
-                    tr.setAttribute("data-friendId", friendsId);
-
-                    document.getElementById("makeGroupTable").appendChild(tr);
-                }
-            }
-        });
-
-        var friendsInGroup = [];
-
-        function makeGroupNewFriend(friendsId) {
-            $("#makeGroupNextBtn").removeAttr("disabled");
-            if (friendsInGroup.includes(friendsId)) {
-                $('button[data-friendId="' + friendsId + '"] > i').attr("class", "far fa-plus-square fa-fw");
-
-                var friendsId = friendsInGroup.indexOf(friendsId);
-                if (friendsId !== -1) friendsInGroup.splice(friendsId, 1);
-
-                if (friendsInGroup.length == 0) {
-                    $("#makeGroupNextBtn").attr("disabled", true);
-                }
-            }
-            else {
-                $('button[data-friendId="' + friendsId + '"] > i').attr("class", "fas fa-check fa-fw");
-                friendsInGroup.push(friendsId);
-            }
-        }
-
-        $("#makeGroupNextBtn").on("click", function () {
-            $("#makeGroupModal").modal("show");
-        });
-
-        $("#makeGroupCreateBtn").click(function () {
-            var groupName = $("#makeGroupName").val();
-            if (groupName.length == 0) {
-                $("#makeGroupName").val("");
-                $("#makeGroupName").attr("placeholder", "Cannot be left empty");
-                $('#makeGroupName').attr('style', 'border-color: red !important;');
-            }
-            else {
-                $("#makeGroupName").attr("placeholder", "Group Name");
-                $('#makeGroupName').removeAttr("style");
-
-                socket.emit("makeGroup", { username: username, groupName: groupName, groupMembers: friendsInGroup });
-            }
-        });
-
-        socket.on("groupMade", function () {
-            $("#makeGroupModal").modal("hide");
-            $("#friends-tab").tab('show');
         });
     });
 
