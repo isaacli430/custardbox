@@ -23,7 +23,6 @@
 
     $("#backButton").on("click", goBack);
     $("#sendButton").on("click", sendMessage);
-    $("#setBackgroundOffsetsButton").on("click", setBackgroundOffsets);
     $(document).on('DOMNodeInserted', '.replyCard', function () {
         scrollDown();
         setTimeout(scrollDown, 200);
@@ -97,10 +96,6 @@
         currGlobalTheme = e.theme;
     });
 
-    var xSlider = document.getElementById("xBackground");
-    var ySlider = document.getElementById("yBackground");
-    xSlider.onchange = changeBackgroundPos;
-    ySlider.onchange = changeBackgroundPos;
     var currChannelMembers;
 
 
@@ -116,43 +111,6 @@
         }
         else if (result.theme != null) {
             setCustomTheme(result.theme);
-        }
-    });
-
-    chrome.storage.local.get(["backgroundEnabled"], function (result) {
-        if (result["backgroundEnabled" == ""]) {
-            chrome.storage.local.set({ backgroundEnabled: false });
-            backgroundEnabled = false;
-        }
-        else if (result.backgroundEnabled) {
-            backgroundEnabled = true;
-
-            setLightTheme();
-            chrome.storage.local.get(["backgroundXOffset"], function (result) {
-                backgroundXOffset = result.backgroundXOffset;
-                chrome.storage.local.get(["backgroundYOffset"], function (result) {
-                    backgroundYOffset = result.backgroundYOffset;
-                    chrome.tabs.captureVisibleTab(function (dataUrl) {
-                        document.body.style.backgroundImage = "url(" + dataUrl + ")";
-
-                        var backgroundImage = new Image();
-                        backgroundImage.src = dataUrl;
-                        backgroundImage.onload = function () {
-                            backgroundWidth = parseInt(this.width);
-                            backgroundHeight = parseInt(this.height);
-                            document.body.style.backgroundPosition = backgroundXOffset + "px " + backgroundYOffset + "px";
-                            xSlider.value = (backgroundXOffset + backgroundWidth - 100) % 600;
-                            ySlider.value = (backgroundYOffset + 300) % 600;
-                        };
-                    });
-                });
-            });
-        }
-        else {
-            backgroundEnabled = false;
-            xSlider.disabled = true;
-            ySlider.disabled = true;
-            $("#setBackgroundOffsetsButton").toggleClass("disabled", true);
         }
     });
 
@@ -539,17 +497,6 @@
         else {
             document.body.style.backgroundImage = "";
         }
-    }
-
-    function changeBackgroundPos() {
-        backgroundXOffset = parseInt(xSlider.value) - backgroundWidth + 100;
-        backgroundYOffset = parseInt(ySlider.value) - 300;
-        document.body.style.backgroundPosition = backgroundXOffset + "px " + backgroundYOffset + "px";
-    }
-
-    function setBackgroundOffsets() {
-        chrome.storage.local.set({ backgroundXOffset: backgroundXOffset });
-        chrome.storage.local.set({ backgroundYOffset: backgroundYOffset });
     }
 
     function promptDeleteAccount() {
