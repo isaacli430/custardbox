@@ -28,7 +28,7 @@ git clone http://github.com/kwugfighter/custardbox
 
 
 
-# Updating the Mod
+# Updating CustardBox
 
 Open a new Terminal window and copy-paste the following code:
 ```
