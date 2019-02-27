@@ -23,15 +23,6 @@
 
     $("#backButton").on("click", goBack);
     $("#sendButton").on("click", sendMessage);
-    $(document).on('DOMNodeInserted', '.replyCard', function () {
-        scrollDown();
-        setTimeout(scrollDown, 200);
-    });
-    $(document).on('DOMNodeInserted', '.sendCard', function () {
-        scrollDown();
-        setTimeout(scrollDown, 200);
-    });
-
 
     // Delete Account
     $("#deleteAccountButton").on("click", promptDeleteAccount);
@@ -1553,7 +1544,7 @@
             messageDiv.appendChild(messageText);
             messageScroll.appendChild(messageDiv);
         }
-
+        document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight;
         $("#backButton").on("click", refreshChannels);
         $(".roleLink").on("click", function () { openMessagePage($(this).attr('data-channelId'), $(this).attr('data-channelName')); });
         $(".dmLink").on("click", function () { openMessagePage($(this).attr('data-userId'), $(this).attr('data-userTag')); });
