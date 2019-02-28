@@ -922,7 +922,7 @@
         var message = messageElement.value;
         messageElement.value = "";
         if (message === "") return;
-        message = unescape(encodeURIComponent(formatTags(message)));
+        message = formatTags(message);
         if (currServerId == undefined) {
             socket.emit('dmMessage', { userId: currChannel, content: message, token: validator })
         } else {
