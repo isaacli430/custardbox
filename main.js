@@ -1314,7 +1314,7 @@
     });
 
     socket.on("newMessage", function (reply) {
-        if (reply.message.attachments != []) {
+        if (reply.message.attachments.length > 0) {
             setTimeout(function () {
                 if (reply.type == "dm") {
                     if (reply.userId == currChannel) {
