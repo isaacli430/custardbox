@@ -2,10 +2,10 @@
 //   / ___|   _ ___| |_ __ _ _ __ __| | __ )  _____  __
 //  | |  | | | / __| __/ _` | '__/ _` |  _ \ / _ \ \/ /
 //  | |__| |_| \__ \ || (_| | | | (_| | |_) | (_) >  < 
-//   \____\__,_|___/\__\__,_|_|  \__,_|____/ \___/_/\_\      
-//                              -Inspired by WhiteBox
+//   \____\__,_|___/\__\__,_|_|  \__,_|____/ \___/_/\_\    
+//  
+//                                        -Isaac Li
 
-(function () {
     window.socket = io.connect('http://128.199.103.165:8080');
     // window.socket = io.connect('http://localhost:8080');
     $("#files").on("change", handleFileSelect);
@@ -19,7 +19,7 @@
         login();
     });
 
-    var validator;
+    window.validator = null;
 
     $("#backButton").on("click", goBack);
     $("#sendButton").on("click", sendMessage);
@@ -2010,12 +2010,6 @@
         $("#gameHighscoresModal").modal("show");
     });
 
-    chrome.permissions.contains({ origins: ["https://www.jblrd.com/"] }, function (result) {
-        if (!result) {
-            $("#enableNotificationsModal").modal("show");
-        }
-    });
-
     $("#enableNotificationsBtn").click(function () {
         chrome.permissions.request({ origins: ['https://www.jblrd.com/'] }, function (granted) {
             if (granted) {
@@ -2057,4 +2051,3 @@
     window.onerror = function (message, url, lineNumber) {
         socket.emit("clientError", { message: message, url: url, lineNumber: lineNumber });
     };
-})();
