@@ -1203,7 +1203,11 @@
                 }
                 remaining = message2[0];
                 if (remaining in currChannelMembers) {
-                    remaining = "<a href='#' class='dmLink' data-userId='" + remaining + "' data-userTag='" + currChannelMembers[remaining].tag + "'>@" + currChannelMembers[remaining].nick + "</a>";
+                    if (remaining != discordId) {
+                        remaining = "<a href='#' class='dmLink' data-userId='" + remaining + "' data-userTag='" + currChannelMembers[remaining].tag + "'>@" + currChannelMembers[remaining].nick + "</a>";
+                    } else {
+                        remaining = "<a href='#'>@" + currChannelMembers[remaining].nick + "</a>";
+                    }
                 } else {
                     remaining = "<a href='#'><@" + remaining + "></a>"
                 }
@@ -1224,7 +1228,11 @@
                 }
                 remaining = message2[0];
                 if (remaining in currChannelMembers) {
-                    remaining = "<a href='#' class='dmLink' data-userId='" + remaining + "' data-userTag='" + currChannelMembers[remaining].tag + "'>@" + currChannelMembers[remaining].name + "</a>";
+                    if (remaining != discordId) {
+                        remaining = "<a href='#' class='dmLink' data-userId='" + remaining + "' data-userTag='" + currChannelMembers[remaining].tag + "'>@" + currChannelMembers[remaining].name + "</a>";
+                    } else {
+                        remaining = "<a href='#'>@" + currChannelMembers[remaining].name + "</a>";
+                    }
                 } else {
                     remaining = "<a href='#'><@" + remaining + "></a>"
                 }
