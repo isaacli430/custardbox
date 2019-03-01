@@ -178,9 +178,16 @@ function openBoardPage(data) {
 }
 
 function makeMove() {
-    x = parseInt($(this).attr('id').split("-")[0]);
-    y = parseInt($(this).attr('id').split("-")[1]);
-    socket.emit("mtttGame", {request: "makeMove", x: x, y: y, token: validator, opponentId: clickedGame.opponentId, id: discordId});
+    if ($(this).attr('class').split(' ').includes("mtttPossible")) {
+        for (var x = 0; x < 9; x++) {
+            for (var y = 0; y < 9; y++) {
+                $("#" + x + "-" + y).removeClass("mtttPossible");
+            }
+        }
+        x = parseInt($(this).attr('id').split("-")[0]);
+        y = parseInt($(this).attr('id').split("-")[1]);
+        socket.emit("mtttGame", {request: "makeMove", x: x, y: y, token: validator, opponentId: clickedGame.opponentId, id: discordId});
+    }
 }
 
 $(".table-search").on("keyup", function () {
