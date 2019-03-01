@@ -28,10 +28,10 @@ $("#mtttGameSettings").on("click", function () {
 socket.emit("mtttGame", { request: "getGames", token: validator, id: discordId });
 
 $("#mtttNewGameBtn").on("click", function () {
-    socket.emit("refreshFriends", { token: validator });
+    socket.emit("mtttRefreshFriends", { token: validator });
 });
 
-socket.on("refreshedFriends", function (reply) {
+socket.on("mtttRefreshedFriends", function (reply) {
     $("#groupNewGameTable").empty();
     for (var i = 0; i < reply.friends.length; i++) {
 
@@ -59,20 +59,12 @@ socket.on("refreshedFriends", function (reply) {
     $(".mtttNewGameWithFriendBtn").on("click", function () {
         var friendId = $(this).attr("data-friendId");
         var userName = $(this).attr("data-UserName");
-
         socket.emit("mtttGame", { request: "newGame", opponentId: friendId, id: discordId, token: validator });
         clickedGame = { opponentId: friendId, opponentName: userName };
         $("#groupNewGameModal").modal("hide");
     });
     $("#groupNewGameModal").modal("show");
 });
-
-function goBack() {
-    clickedGame = {};
-    board = undefined;
-    game = undefined;
-    socket.emit("mtttGame", { request: "getGames" });
-}
 
 $("#backButton").on("click", function () {
     goBack();
@@ -129,12 +121,9 @@ socket.on("mtttGame", function (reply) {
     else if (response === "existingGameData") {
         openBoardPage(data);
     }
-    else if (response === "newMove") {
+    else if (response === "refreshBoard") {
         if (data.opponentId = clickedGame.opponentId) {
-            updateBoard(data);
-        }
-        else {
-            socket.emit("mtttGame", { request: "getGames" });
+            openBoardPage(data);
         }
     }
 });
@@ -151,7 +140,7 @@ function startGame() {
             $("#" + x + "-" + y).addClass("mtttPossible");
         }
     }
-    $("#mtttPossible").on("click", makeMove);
+    $(".mtttPossible").on("click", makeMove);
 }
 
 function openBoardPage(data) {
@@ -160,6 +149,14 @@ function openBoardPage(data) {
 
     $("#mtttTable").show();
     $("#mtttSelectGame").hide();
+
+    if (data.finished) {
+        if (data.victory == null) {
+            $("#mtttStatus").html = "Draw";
+        } else {
+            $("#mtttStatus").html = data.victory + " Wins!";
+        }
+    }
     for (var x = 0; x < 9; x++) {
         for (var y = 0; y < 9; y++) {
             if (data.board[x][y] == "X") {
@@ -168,7 +165,7 @@ function openBoardPage(data) {
             } else if (data.board[x][y] == "O") {
                 $("#" + x + "-" + y).removeClass("mtttPossible");
                 $("#" + x + "-" + y).html('<i class="fas fa-circle-notch"></i>');
-            } else if (data.any || (turn == discordId && x == data.prevMove)) {
+            } else if ((data.any || (data.turn == discordId && x == data.prevMove)) && !data.finished) {
                 $("#" + x + "-" + y).html("");
                 $("#" + x + "-" + y).addClass("mtttPossible");
             } else {
@@ -177,20 +174,13 @@ function openBoardPage(data) {
             }
         }
     }
-    $("#mtttPossible").on("click", makeMove);
-}
-
-function updateBoard(data) {
-    game.load_pgn(data.pgn);
-    board.position(game.fen(), true);
-    clickedGame.pgn = data.pgn;
-    updateStatus();
+    $(".mtttPossible").on("click", makeMove);
 }
 
 function makeMove() {
-    x = $(this).id.split("-")[0];
-    y = $(this).id.split("-")[0];
-    click
+    x = parseInt($(this).attr('id').split("-")[0]);
+    y = parseInt($(this).attr('id').split("-")[1]);
+    socket.emit("mtttGame", {request: "makeMove", x: x, y: y, token: validator, opponentId: clickedGame.opponentId, id: discordId});
 }
 
 $(".table-search").on("keyup", function () {
