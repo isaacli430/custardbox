@@ -152,9 +152,10 @@ function openBoardPage(data) {
 
     if (data.finished) {
         if (data.victory == null) {
-            $("#mtttStatus").html = "Draw";
+            $("#mtttStatus").html("Draw");
         } else {
-            $("#mtttStatus").html = data.victory + " Wins!";
+            string = data.victory + " Wins!";
+            $("#mtttStatus").html(string);
         }
     }
     for (var x = 0; x < 9; x++) {
