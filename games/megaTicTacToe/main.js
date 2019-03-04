@@ -166,7 +166,7 @@ function openBoardPage(data) {
             } else if (data.board[x][y] == "O") {
                 $("#" + x + "-" + y).removeClass("mtttPossible");
                 $("#" + x + "-" + y).html('<i class="fas fa-circle-notch"></i>');
-            } else if ((data.any || (data.turn == discordId && x == data.prevMove)) && !data.finished) {
+            } else if (((data.any && data.turn == discordId) || (data.turn == discordId && x == data.prevMove)) && !data.finished) {
                 $("#" + x + "-" + y).html("");
                 $("#" + x + "-" + y).addClass("mtttPossible");
             } else {
