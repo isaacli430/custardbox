@@ -1,5 +1,3 @@
-
-var clickedGame = {};
 var board;
 var game;
 

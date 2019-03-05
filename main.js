@@ -64,6 +64,7 @@
     var messagePageElement = $("#messagePage");
     var mainTabs = $("#mainTabs");
     var discordId;
+    var clickedGame;
 
     // Login
     var softwareVersion = chrome.runtime.getManifest().version;
@@ -707,6 +708,7 @@
     });
 
     function goBack() {
+        clickedGame = {};
         if ($("#gameArea").is(":visible")) {
             $("#gameArea").hide();
             $("#backButton").hide();
@@ -1628,6 +1630,7 @@
         $("#users").empty();
         $("#loadGif").hide();
         $("#backButton").hide();
+        clickedGame = {};
         var button = document.createElement("button");
         button.classList.add("textLink");
         button.onclick = function () { openFriendsPage(); }; // 0 because it is a friend

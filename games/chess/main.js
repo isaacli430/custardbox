@@ -1,5 +1,4 @@
 (function() {
-    var clickedGame = {};
     var board;
     var game;
     
@@ -17,6 +16,7 @@
     
         $("#chessDeleteGame").on("click", function() {
             socket.emit("chessGame", {request: "deleteGame", opponentId: clickedGame.opponentId, id: discordId, token: validator});
+            clickedGame = {};
             $("#chessGameSettingsModal").modal("hide");
             $("#chessGameArea").hide();
             $("#chessSelectGame").show();
@@ -59,7 +59,7 @@
             var friendId = $(this).attr("data-friendId");
             var userName = $(this).attr("data-userName");
             clickedGame = {opponentId: friendId, opponentName: userName, stepPosition: 0};
-            socket.emit("chessGame", {request: "newGame", opponentId: clickedGame.opponentId, id: discordId, token: validator});
+            socket.emit("chessGame", {request: "getGameData", opponentId: friendId, id: discordId, token: validator});
             $("#chessGroupNewGameModal").modal("hide");
         });
         $("#chessGroupNewGameModal").modal("show");
@@ -165,9 +165,9 @@
                 button.setAttribute("data-userId", opponentId);
                 button.setAttribute("data-name", opponentName);
                 button.onclick = function() {getGameData(this.getAttribute("data-userId"), this.getAttribute("data-name"))};
-                game = new Chess();
-                game.load_pgn(data[i].pgn);
-                turn = game.turn();
+                gameTemp = new Chess();
+                gameTemp.load_pgn(data[i].pgn);
+                turn = gameTemp.turn();
                 if (data[i].playerColor == turn) {
                     button.innerHTML = '<i class="fas fa-exclamation"></i>';
                 } else {
@@ -197,7 +197,7 @@
         if(response === "gameData"){
             var playerColor = data.playerColor;
             var pgn = data.pgn;
-    
+            
             clickedGame.pgn = pgn;
             startGame(playerColor, pgn);
         }
@@ -206,7 +206,10 @@
         }
         else if(response === "newMove"){
             if(data.opponentId == clickedGame.opponentId){
-                startGame(data.playerColor, data.pgn);
+                game.load_pgn(data.pgn);
+                board.position(game.fen());
+                clickedGame.pgn = data.pgn;
+                updateStatus();
             }
         } else if (response === "deleteGame") {
             socket.emit("chessGame", {request: "getGames", token: validator, id: discordId});
@@ -340,13 +343,6 @@
         }
     
         board = ChessBoard('chessBoard', cfg);
-        updateStatus();
-    }
-    
-    function updateBoard(data){
-        game.load_pgn(data.pgn);
-        board.position(game.fen(), true);
-        clickedGame.pgn = data.pgn;
         updateStatus();
     }
     
