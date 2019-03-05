@@ -10,14 +10,13 @@
         $("#chessGameSettingsModal").modal("show");
     
         $("#chessRestartGame").on("click", function() {
-            socket.emit("chessGame", {request: "updateBoard", data: {pgn: "", opponentId: clickedGame.opponentId}});
+            socket.emit("chessGame", {request: "updateBoard", pgn: "", opponentId: clickedGame.opponentId, id: discordId, token: validator});
             $("#chessGameSettingsModal").modal("hide");
             getGameData(clickedGame.opponentId, clickedGame.opponentName);
         });
     
         $("#chessDeleteGame").on("click", function() {
-            socket.emit("chessGame", {request: "deleteGame", data: {opponentId: clickedGame.opponentId}});
-            socket.emit("chessGame", {request: "getGames"});
+            socket.emit("chessGame", {request: "deleteGame", opponentId: clickedGame.opponentId, id: discordId, token: validator});
             $("#chessGameSettingsModal").modal("hide");
             $("#chessGameArea").hide();
             $("#chessSelectGame").show();
@@ -25,88 +24,46 @@
     });
     
     // Get games
-    socket.emit("chessGame", {request: "getGames"});
+    socket.emit("chessGame", {request: "getGames", token: validator, id: discordId});
     
     $("#chessNewGameBtn").on("click", function() {
-        chrome.storage.local.get(["chats"], function(result) {
-            var friends = result.chats[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
-            var groups = result.chats[1]; // // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
-    
-            var chats = [];// [[id, type], ...] type: 0: friend, 1: group
-            for(var i = 0; i<Object.keys(friends).length; i++){
-                chats.push([Object.keys(friends)[i], 0]);
-            }
-            for(var i = 0; i<Object.keys(groups).length; i++){
-                chats.push([Object.keys(groups)[i], 1]);
-            }
-    
-            var sortedChats = chats.sort(function(a,b){
-                var lastActivityA;
-                var lastActivityB;
-                
-                if(a[1] == 0){
-                    lastActivityA = friends[a[0]].lastActivity;
-                }
-                else{
-                    lastActivityA = groups[a[0]].lastActivity;
-                }
-                
-                if(b[1] == 0){
-                    lastActivityB = friends[b[0]].lastActivity;
-                }
-                else{
-                    lastActivityB = groups[b[0]].lastActivity;
-                }
-    
-                return lastActivityA - lastActivityB;
-            }).reverse();
-    
-            $("#groupNewGameTable").empty();
-    
-            for(var i = 0; i<sortedChats.length; i++){
-                if(sortedChats[i][1] == 0){ // Is friend
-                    var friendsId = sortedChats[i][0];
-                    var friendsName = friends[friendsId].name;
-    
-                    var chatIcon = document.createElement("i");
-                    chatIcon.setAttribute("class", "far fa-plus-square fa-fw");
-    
-                    var button = document.createElement("button");
-                    button.classList.add("textLink");
-                    button.classList.add("chessNewGameWithFriendBtn");
-                    button.setAttribute("data-friendId", friendsId);
-                    button.appendChild(chatIcon);
-                    button.innerHTML += " "+friendsName;
-    
-                    var buttonTd = document.createElement("td");
-                    buttonTd.appendChild(button);
-    
-                    var tr = document.createElement("tr");
-                    tr.appendChild(buttonTd);
-                    tr.setAttribute("data-friendId", friendsId);
-    
-                    document.getElementById("groupNewGameTable").appendChild(tr);
-                }
-            }
-    
-            $(".chessNewGameWithFriendBtn").on("click", function() {
-                var friendId = $(this).attr("data-friendId");
-    
-                socket.emit("chessGame", {request: "newGame", data: {opponentId: friendId}});
-                clickedGame = {opponentId: friendId, opponentName: friends[friendId].name, pgn: "", stepPosition: 0};
-                $("#groupNewGameModal").modal("hide");
-            });
-        });
-    
-        $("#groupNewGameModal").modal("show");
+        socket.emit("chessRefreshFriends", { token: validator });
     });
+
+    socket.on("chessRefreshedFriends", function (reply) {
+        $("#chessGroupNewGameTable").empty();
+        for (var i = 0; i < reply.friends.length; i++) {
     
-    function goBack() {
-        clickedGame = {};
-        board = undefined;
-        game = undefined;
-        socket.emit("chessGame", {request: "getGames"});
-    }
+            var chatIcon = document.createElement("i");
+            chatIcon.setAttribute("class", "far fa-plus-square fa-fw");
+    
+            var button = document.createElement("button");
+            button.classList.add("textLink");
+            button.classList.add("chessNewGameWithFriendBtn");
+            button.setAttribute("data-friendId", reply.friends[i].userId);
+            button.setAttribute("data-userName", reply.friends[i].userName);
+            button.appendChild(chatIcon);
+            button.innerHTML += " " + reply.friends[i].userName;
+    
+            var buttonTd = document.createElement("td");
+            buttonTd.appendChild(button);
+    
+            var tr = document.createElement("tr");
+            tr.appendChild(buttonTd);
+            tr.setAttribute("data-friendId", reply.friends[i].userId);
+            button.setAttribute("data-userName", reply.friends[i].userName);
+    
+            document.getElementById("chessGroupNewGameTable").appendChild(tr);
+        }
+        $(".chessNewGameWithFriendBtn").on("click", function () {
+            var friendId = $(this).attr("data-friendId");
+            var userName = $(this).attr("data-userName");
+            clickedGame = {opponentId: friendId, opponentName: userName, stepPosition: 0};
+            socket.emit("chessGame", {request: "newGame", opponentId: clickedGame.opponentId, id: discordId, token: validator});
+            $("#chessGroupNewGameModal").modal("hide");
+        });
+        $("#chessGroupNewGameModal").modal("show");
+    });
     
     $("#backButton").on("click", function() {
         goBack();
@@ -196,49 +153,40 @@
     });
     
     function refreshGames(data){
-        chrome.storage.local.get(["chats"], function(result) {
             $("#chessGamesTable tr").not(':first').remove();
-    
-            var friends = result.chats[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
     
             for (var i = 0; i < data.length; i++) {
                 var opponentId = data[i].opponentId;
-                var lastPlayer = data[i].lastPlayer;
-                var lastActivity = data[i].lastActivity;
-                var opponentName = friends[opponentId].name;
-    
+                var opponentName = data[i].opponentName;
+
                 var button = document.createElement("button");
                 button.classList.add("textLink");
                 button.classList.add("addFriendToGroupBtn");
                 button.setAttribute("data-userId", opponentId);
                 button.setAttribute("data-name", opponentName);
-                button.innerHTML += " "+opponentName;
                 button.onclick = function() {getGameData(this.getAttribute("data-userId"), this.getAttribute("data-name"))};
-    
+                game = new Chess();
+                game.load_pgn(data[i].pgn);
+                turn = game.turn();
+                if (data[i].playerColor == turn) {
+                    button.innerHTML = '<i class="fas fa-exclamation"></i>';
+                } else {
+                    button.innerHTML = '<i class="fas fa-arrow-right"></i>';
+                }
+                button.innerHTML += " "+opponentName;
+
                 var buttonTd = document.createElement("td");
                 buttonTd.appendChild(button);
     
-                var lastActivityA = document.createElement("a");
-                var lastActivityFormatted = calcLastOnline(lastActivity);
-    
-                lastActivityA.classList.add("lastOnline");
-                lastActivityA.innerHTML = lastActivityFormatted;
-    
-                var lastActivityTd = document.createElement("td");
-                lastActivityTd.align = "right";
-                lastActivityTd.appendChild(lastActivityA);
-    
                 var tr = document.createElement("tr");
                 tr.appendChild(buttonTd);
-                tr.appendChild(lastActivityTd);
     
                 document.getElementById("chessGamesTable").appendChild(tr);
             }
-        });
     }
     
     function getGameData(opponentId, opponentName){
-        socket.emit("chessGame", {request: "getGameData", data: {opponentId: opponentId}});
+        socket.emit("chessGame", {request: "getGameData", opponentId: opponentId, id: discordId, token: validator});
         clickedGame = {opponentId: opponentId, opponentName: opponentName, stepPosition: 0};
     }
     
@@ -248,27 +196,24 @@
     
         if(response === "gameData"){
             var playerColor = data.playerColor;
-            var whiteId = data.whiteId;
-            var blackId = data.blackId;
             var pgn = data.pgn;
     
             clickedGame.pgn = pgn;
-            startGame(playerColor, whiteId, blackId, pgn);
+            startGame(playerColor, pgn);
         }
         else if(response === "games"){
             refreshGames(data);
         }
         else if(response === "newMove"){
-            if(data.opponentId = clickedGame.opponentId){
-                updateBoard(data);
+            if(data.opponentId == clickedGame.opponentId){
+                startGame(data.playerColor, data.pgn);
             }
-            else{
-                socket.emit("chessGame", {request: "getGames"});
-            }
+        } else if (response === "deleteGame") {
+            socket.emit("chessGame", {request: "getGames", token: validator, id: discordId});
         }
     });
     
-    function startGame(playerColor, whiteId, blackId, pgn){
+    function startGame(playerColor, pgn){
         $("#chessOpponentName").text(clickedGame.opponentName);
     
         $("#chessGameArea").show();
@@ -333,7 +278,7 @@
             if (move === null) return 'snapback';
     
             updateStatus();
-            socket.emit("chessGame", {request: "updateBoard", data: {pgn: game.pgn(), opponentId: opponentId}});
+            socket.emit("chessGame", {request: "updateBoard", pgn: game.pgn(), opponentId: opponentId, id: discordId, token: validator});
         };
     
         var onMouseoverSquare = function(square, piece) {

@@ -5,25 +5,6 @@ var game;
 
 $("#mtttTable").hide();
 
-// Settings button press
-$("#mtttGameSettings").on("click", function () {
-    $("#mtttGameSettingsModal").modal("show");
-
-    $("#mtttRestartGame").on("click", function () {
-        socket.emit("mtttGame", { request: "updateBoard", data: { pgn: "", opponentId: clickedGame.opponentId } });
-        $("#mtttGameSettingsModal").modal("hide");
-        getGameData(clickedGame.opponentId, clickedGame.opponentName);
-    });
-
-    $("#mtttDeleteGame").on("click", function () {
-        socket.emit("mtttGame", { request: "deleteGame", data: { opponentId: clickedGame.opponentId } });
-        socket.emit("mtttGame", { request: "getGames" });
-        $("#mtttGameSettingsModal").modal("hide");
-        $("#mtttGameArea").hide();
-        $("#mtttSelectGame").show();
-    });
-});
-
 // Get games
 socket.emit("mtttGame", { request: "getGames", token: validator, id: discordId });
 
@@ -58,7 +39,7 @@ socket.on("mtttRefreshedFriends", function (reply) {
     }
     $(".mtttNewGameWithFriendBtn").on("click", function () {
         var friendId = $(this).attr("data-friendId");
-        var userName = $(this).attr("data-UserName");
+        var userName = $(this).attr("data-userName");
         socket.emit("mtttGame", { request: "newGame", opponentId: friendId, id: discordId, token: validator });
         clickedGame = { opponentId: friendId, opponentName: userName };
         $("#groupNewGameModal").modal("hide");
@@ -77,7 +58,7 @@ $(document).keydown(function (e) {
 });
 
 function refreshGames(data) {
-    $("#mtttGamesTable").find("tr:gt(0)").remove();
+    $("#chessGamesTable").find("tr:gt(0)").remove();
     for (var i = 0; i < data.length; i++) {
         var opponentId = data[i].opponentId;
         var opponentName = data[i].opponentName;
@@ -136,7 +117,6 @@ function startGame() {
     for (var x = 0; x < 9; x++) {
         for (var y = 0; y < 9; y++) {
             $("#" + x + "-" + y).text("");
-            $("#" + x + "-" + y).removeClass("mtttX mtttO");
             $("#" + x + "-" + y).addClass("mtttPossible");
         }
     }
