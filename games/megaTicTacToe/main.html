@@ -53,9 +53,14 @@
 		</div>
 	</div>
 </div>
-
 <table id="mtttTable">
-    <p id="mtttStatus" style="text-align: center"></p>
+    <td style="vertical-align: top" colspan="12">
+        <div height="3em" style="padding-top: 0.5em;padding-bottom: 1em;">
+            <p style="float: left;" id="mtttName"></p>
+            <i class="fas fa-bars text float-right icon-btn ml-2 mr-1" id="mtttGameSettings"></i>
+        </div>
+    </td>
+    
     <tr>
         <td id="0-0" class="mtttTd"></td>
         <td id="0-1" class="vert mtttTd"></td>
@@ -180,7 +185,9 @@
         <td id="8-8" class="bott mtttTd"></td>
     </tr>
     <tr>
-        <td class="horiBreaker"></td>
+        <td class="horiBreaker" colspan="12">
+            <p id="mtttStatus" style="text-align: center; float: left;"></p>
+        </td>
     </tr>
 </table>
 

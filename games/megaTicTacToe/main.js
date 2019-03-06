@@ -31,7 +31,7 @@ socket.on("mtttRefreshedFriends", function (reply) {
         var tr = document.createElement("tr");
         tr.appendChild(buttonTd);
         tr.setAttribute("data-friendId", reply.friends[i].userId);
-        button.setAttribute("data-userName", reply.friends[i].userName);
+        tr.setAttribute("data-userName", reply.friends[i].userName);
 
         document.getElementById("groupNewGameTable").appendChild(tr);
     }
@@ -56,7 +56,7 @@ $(document).keydown(function (e) {
 });
 
 function refreshGames(data) {
-    $("#chessGamesTable").find("tr:gt(0)").remove();
+    $("#mtttGamesTable").find("tr:gt(0)").remove();
     for (var i = 0; i < data.length; i++) {
         var opponentId = data[i].opponentId;
         var opponentName = data[i].opponentName;
@@ -127,6 +127,7 @@ function openBoardPage(data) {
 
     $("#mtttTable").show();
     $("#mtttSelectGame").hide();
+    $("#mtttName").html(clickedGame.opponentName);
 
     if (data.finished) {
         if (data.victory == null) {
