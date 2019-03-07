@@ -372,7 +372,6 @@ var canHoldShape = true;
 var timeInt = 12000;
 var lockDelayInt = 0;
 var failed = true;
-var remaining;
 var b2b = false;
 var comboLength = 0;
 
@@ -496,7 +495,6 @@ chrome.storage.local.get(["theme"], function(result) {
             shapeBag = result.tetrisUltraGameBoard.shapeBag;
             timeInt = result.tetrisUltraGameBoard.time;
             lockDelayInt = result.tetrisUltraGameBoard.lockDelay;
-            remaining = result.tetrisUltraGameBoard.remaining;
 
             if(board == undefined){
                 board = result.tetrisUltraGameBoard[0];
@@ -566,7 +564,6 @@ function init() {
     lockDelay.stop();
     lockDelay.reset();
     shapeBag = [];
-    remaining = 75;
     score = 0;
     failed = true;
     heldShapeId = undefined;
@@ -612,7 +609,6 @@ function tick(key) {
     }
 
     chrome.storage.local.set({tetrisUltraGameBoard: {board: board, 
-                                                    remaining: remaining, 
                                                     currentX: currentX, 
                                                     currentY: currentY, 
                                                     current: current,
@@ -694,11 +690,6 @@ function clearLines() {
             }
             ++y;
         }
-    }
-    remaining -= rowsCleared;
-    if (remaining <= 0) {
-        lose = true;
-        failed = false;
     }
 
     var pointsAwarded = 0;
@@ -990,13 +981,6 @@ function render() {
     }
     
     ctx.fillText("NEXT",326,8);
-    ctx.font = "30px Verdana";
-    if (remaining < 0) {
-        remaining = 0;
-    }
-    ctx.fillText(remaining.toString(), 24, 200);
-    ctx.font="15px Verdana";
-    ctx.fillText("lines", 24, 235);
     // If shape bag is empty
     if(shapeBag.length == 0){
         shapeBag = shuffle([0, 1, 2, 3, 4, 5, 6]);
