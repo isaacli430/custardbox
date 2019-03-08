@@ -374,6 +374,11 @@ var lockDelayInt = 0;
 var failed = true;
 var b2b = false;
 var comboLength = 0;
+var prevMoveIsRotate = false;
+var tspin = false;
+var move = "";
+var debbieDelay = 0;
+var b2bBonus = 1;
 
 var renderInterval = 30;
 var tickInterval = 500;
@@ -424,6 +429,9 @@ var Stopwatch = function(changeVar, options) {
         } else if (changeVar == 'lockDelayInt') {
             lockDelayInt = 0;
         }
+        else if (changeVar == 'debbieDelay') {
+            debbieDelay = 0;
+        }
     }
   
     function update() {
@@ -431,6 +439,9 @@ var Stopwatch = function(changeVar, options) {
             timeInt -= Math.floor(delta()/10);
         } else if (changeVar == 'lockDelayInt') {
             lockDelayInt += delta();
+        }
+        else if (changeVar == 'debbieDelay') {
+            debbieDelay += delta();
         }
       
     }
@@ -451,6 +462,7 @@ var Stopwatch = function(changeVar, options) {
 
 var timer = new Stopwatch('timeInt', {delay: 510});
 var lockDelay = new Stopwatch('lockDelayInt', {delay: 10});
+var defaltDebbie = new Stopwatch('debbieDelay', {delay: 10});
 
 // On game start
 chrome.storage.local.get(["theme"], function(result) {
@@ -527,8 +539,8 @@ function newShape(shapeId) {
         shapeBag.pop(); // remove last element from list
     } else {
         currentId = shapeId;
+        
     }
-
     var shape = shapes[currentId]; // maintain id for color filling
     current = [];
     for ( var y = 0; y < 4; ++y ) {
@@ -586,7 +598,8 @@ function tick(key) {
     }
 
     if ( valid( 0, 1 ) ) {
-        ++currentY;
+        //++currentY;
+        prevMoveIsRotate = false;
     }
     // if the element settled
     else {
@@ -623,6 +636,28 @@ function tick(key) {
 
 // stop shape at its position and fix it to board
 function freeze() {
+    //check for 3 corner t spin
+    tspin = false;
+    var filledCorners = 0;
+    if(prevMoveIsRotate && currentId == 6){
+        if(board[currentY + 3][currentX + 2] != 0){
+        	filledCorners += 1
+        }
+        if(board[currentY + 1][currentX + 2] != 0){
+        	filledCorners += 1
+        }
+        if(board[currentY + 3][currentX] != 0){
+        	filledCorners += 1
+        }
+        if(board[currentY + 1][currentX] != 0){
+        	filledCorners += 1
+        }
+        if(filledCorners >= 3){
+        	tspin = true;
+        }
+
+    }
+
     for (var y = 0; y < 4; ++y) {
         for (var x = 0; x < 4; ++x) {
             if (current[y][x]) {
@@ -693,8 +728,8 @@ function clearLines() {
     }
 
     var pointsAwarded = 0;
-    var tspin = false;
-    var b2bBonus = 1;
+    b2bBonus = 1;
+
     //increase score
     if(b2b){
         b2bBonus = 1.5;
@@ -706,25 +741,31 @@ function clearLines() {
     else{
         if (rowsCleared == 1){
         pointsAwarded = 100;
+        move = "SINGLE";
         if(tspin){
             pointsAwarded = 400;
             b2b = true;
+            move = "T SPIN SINGLE";
         }
         comboLength += 1;
         }
         else if(rowsCleared == 2){
             pointsAwarded = 300;
+            move = "DOUBLE";
             if(tspin){
                 pointsAwarded = 800;
                 b2b = true;
+                move = "T SPIN DOUBLE";
             }
             comboLength += 1;
         }
         else if(rowsCleared == 3){
             pointsAwarded = 500
+            move = "Triple";
             if(tspin){
                 pointsAwarded = 1600;
                 b2b = true;
+                move = "T SPIN TRIPLE";
             }
             comboLength += 1;
         }
@@ -732,6 +773,7 @@ function clearLines() {
             pointsAwarded = 800
             b2b = true;
             comboLength += 1;
+            move = "TETRIS";
         }
         score += (pointsAwarded*b2bBonus + comboLength*50 - 50);
     }
@@ -739,6 +781,7 @@ function clearLines() {
 }
 
 function keyPress( key ) {
+    prevMoveIsRotate = false;
     switch ( key ) {
         case 'left':
             if ( valid( -1 ) ) {
@@ -767,6 +810,7 @@ function keyPress( key ) {
                 }
                 for (i = 0; i < tests.length; i++) {
                     if ( valid( tests[i][0], tests[i][1]*-1, rotated[0] ) ) {
+                        prevMoveIsRotate = true;
                         lockDelay.reset();
                         current = rotated[0];
                         currentX += tests[i][0];
@@ -1020,6 +1064,20 @@ function render() {
                 }
             }
         }
+    }
+
+    //default debbie
+    if(move != "" && debbieDelay < 1000){
+    	defaltDebbie.start();
+        ctx.font="Bold 20px Verdana";
+	    for (var i = 0; i <= move.length - 1; i++) {
+	    	ctx.fillText(move[i],24,100 + 25*i);
+	    }
+    }
+    else{
+    	move = "";
+    	defaltDebbie.stop();
+    	defaltDebbie.reset();
     }
 }
 
