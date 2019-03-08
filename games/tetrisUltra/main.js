@@ -739,6 +739,8 @@ function clearLines() {
         comboLength = 0;
     }
     else{
+        defaltDebbie.stop();
+        defaltDebbie.reset();
         if (rowsCleared == 1){
         pointsAwarded = 100;
         move = "SINGLE";
