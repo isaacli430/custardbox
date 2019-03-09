@@ -1160,6 +1160,8 @@ function gameEnded() {
         } else {
             ctx.font="20px Verdana";
             ctx.fillText("Try Again Next Time!",175,130);
+            ctx.font="14px Verdana";
+            ctx.fillText("Highscore: "+result["gameHighScore"][game], 175, 152);
         }
         ctx.font="14px Verdana";
         ctx.fillText("Press R To Restart",175,190);
