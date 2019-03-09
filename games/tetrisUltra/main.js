@@ -375,6 +375,7 @@ var failed = true;
 var b2b = false;
 var comboLength = 0;
 var tspin = false;
+var prevMoveWasRotate = false;
 var move = "";
 var debbieDelay = 0;
 var b2bBonus = 1;
@@ -654,7 +655,7 @@ function freeze() {
                 filledCorners += 1;
             }
         }
-        if(filledCorners >= 3){
+        if(filledCorners >= 3 && prevMoveWasRotate){
         	tspin = true;
         }
 
@@ -741,42 +742,48 @@ function clearLines() {
     }
     else{
         b2b = false;
+        comboLength += 1;
         defaultDebbie.stop();
         defaultDebbie.reset();
         if (rowsCleared == 1){
-        pointsAwarded = 100;
-        move = "SINGLE";
-        if(tspin){
-            pointsAwarded = 400*b2bBonus;
-            b2b = true;
-            move = "TSPIN SINGLE";
-        }
-        comboLength += 1;
+            if(tspin){
+                pointsAwarded = 400*b2bBonus;
+                b2b = true;
+                move = "TSPIN SINGLE";
+            }
+            else{
+                pointsAwarded = 100;
+                move = "SINGLE";
+                b2bBonus = 1;
+            }
         }
         else if(rowsCleared == 2){
-            pointsAwarded = 300;
-            move = "DOUBLE";
             if(tspin){
                 pointsAwarded = 800*b2bBonus;
                 b2b = true;
                 move = "TSPIN DOUBLE";
             }
-            comboLength += 1;
+            else{
+                pointsAwarded = 300;
+                move = "DOUBLE";
+                b2bBonus = 1;
+            }
         }
         else if(rowsCleared == 3){
-            pointsAwarded = 500
-            move = "Triple";
             if(tspin){
                 pointsAwarded = 1600*b2bBonus;
                 b2b = true;
                 move = "TSPIN TRIPLE";
             }
-            comboLength += 1;
+            else{
+                pointsAwarded = 500
+                move = "Triple";
+                b2bBonus = 1;
+            }
         }
         else if(rowsCleared == 4){
             pointsAwarded = 800*b2bBonus;
             b2b = true;
-            comboLength += 1;
             move = "TETRIS";
         }
         score += (pointsAwarded + comboLength*50 - 50);
@@ -790,17 +797,20 @@ function keyPress( key ) {
             if ( valid( -1 ) ) {
                 lockDelay.reset();
                 --currentX;
+                prevMoveWasRotate = false;
             }
             break;
         case 'right':
             if ( valid( 1 ) ) {
                 lockDelay.reset();
                 ++currentX;
+                prevMoveWasRotate = false;
             }
             break;
         case 'down':
             if ( valid( 0, 1 ) ) {
                 ++currentY;
+                prevMoveWasRotate = false;
             }
             break;
         case 'rotate':
@@ -817,6 +827,7 @@ function keyPress( key ) {
                         current = rotated[0];
                         currentX += tests[i][0];
                         currentY -= tests[i][1];
+                        prevMoveWasRotate = true;
                         break;
                     }
                 }
@@ -825,6 +836,7 @@ function keyPress( key ) {
         case 'drop':
             while( valid(0, 1) ) {
                 ++currentY;
+                prevMoveWasRotate = false;
             }
             tick('drop');
             break;
@@ -834,6 +846,7 @@ function keyPress( key ) {
                 newShape(heldShapeId);
                 heldShapeId = lastShapeId;
                 canHoldShape = false;
+                prevMoveWasRotate = false;
             }
             break;
         case 'rotateOther':
@@ -849,6 +862,7 @@ function keyPress( key ) {
                         current = rotated[0];
                         currentX += tests[i][0];
                         currentY -= tests[i][1];
+                        prevMoveWasRotate = true;
                         break;
                     }
                 }
