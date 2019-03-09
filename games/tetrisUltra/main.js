@@ -374,7 +374,6 @@ var lockDelayInt = 0;
 var failed = true;
 var b2b = false;
 var comboLength = 0;
-var prevMoveIsRotate = false;
 var tspin = false;
 var move = "";
 var debbieDelay = 0;
@@ -384,6 +383,8 @@ var renderInterval = 30;
 var tickInterval = 500;
 var canvas = document.getElementById("tetrisUltraCanvas");
 var ctx = canvas.getContext('2d');
+
+const corners = [[3,2],[1,2],[3,0],[1,0]];
 
 // On games tab close
 $('#games-tab').on('hide.bs.tab', goBack);
@@ -462,7 +463,7 @@ var Stopwatch = function(changeVar, options) {
 
 var timer = new Stopwatch('timeInt', {delay: 510});
 var lockDelay = new Stopwatch('lockDelayInt', {delay: 10});
-var defaltDebbie = new Stopwatch('debbieDelay', {delay: 10});
+var defaultDebbie = new Stopwatch('debbieDelay', {delay: 10});
 
 // On game start
 chrome.storage.local.get(["theme"], function(result) {
@@ -581,6 +582,12 @@ function init() {
     heldShapeId = undefined;
     currentId = undefined;
     canHoldShape = true;
+    b2b = false;
+    b2bBonus = 1;
+    comboLength = 0;
+    tspin = false;
+    move = "";
+    debbieDelay = 0;
     newShape();
 }
 
@@ -598,13 +605,12 @@ function tick(key) {
     }
 
     if ( valid( 0, 1 ) ) {
-        //++currentY;
-        prevMoveIsRotate = false;
+        ++currentY;
     }
     // if the element settled
     else {
         lockDelay.start();
-        if (lockDelayInt >= 50 || key == 'drop') {
+        if (lockDelayInt >= 300 || key == 'drop') {
             freeze();
             valid(0, 1);
             clearLines();
@@ -639,18 +645,14 @@ function freeze() {
     //check for 3 corner t spin
     tspin = false;
     var filledCorners = 0;
-    if(prevMoveIsRotate && currentId == 6){
-        if(board[currentY + 3][currentX + 2] != 0){
-        	filledCorners += 1
-        }
-        if(board[currentY + 1][currentX + 2] != 0){
-        	filledCorners += 1
-        }
-        if(board[currentY + 3][currentX] != 0){
-        	filledCorners += 1
-        }
-        if(board[currentY + 1][currentX] != 0){
-        	filledCorners += 1
+    if(currentId == 6){
+        for (var i = 0; i < 4; i++) {
+            if(board.length - 1 < currentY + corners[i][0] || board[currentY + corners[i][0]].length - 1 < currentX + corners[i][1]){
+                filledCorners += 1;
+            }
+            else if(board[currentY + corners[i][0]][currentX + corners[i][1]] != 0){
+                filledCorners += 1;
+            }
         }
         if(filledCorners >= 3){
         	tspin = true;
@@ -734,20 +736,20 @@ function clearLines() {
     if(b2b){
         b2bBonus = 1.5;
     }
-    b2b = false;
     if(rowsCleared == 0){
         comboLength = 0;
     }
     else{
-        defaltDebbie.stop();
-        defaltDebbie.reset();
+        b2b = false;
+        defaultDebbie.stop();
+        defaultDebbie.reset();
         if (rowsCleared == 1){
         pointsAwarded = 100;
         move = "SINGLE";
         if(tspin){
-            pointsAwarded = 400;
+            pointsAwarded = 400*b2bBonus;
             b2b = true;
-            move = "T SPIN SINGLE";
+            move = "TSPIN SINGLE";
         }
         comboLength += 1;
         }
@@ -755,9 +757,9 @@ function clearLines() {
             pointsAwarded = 300;
             move = "DOUBLE";
             if(tspin){
-                pointsAwarded = 800;
+                pointsAwarded = 800*b2bBonus;
                 b2b = true;
-                move = "T SPIN DOUBLE";
+                move = "TSPIN DOUBLE";
             }
             comboLength += 1;
         }
@@ -765,25 +767,24 @@ function clearLines() {
             pointsAwarded = 500
             move = "Triple";
             if(tspin){
-                pointsAwarded = 1600;
+                pointsAwarded = 1600*b2bBonus;
                 b2b = true;
-                move = "T SPIN TRIPLE";
+                move = "TSPIN TRIPLE";
             }
             comboLength += 1;
         }
         else if(rowsCleared == 4){
-            pointsAwarded = 800
+            pointsAwarded = 800*b2bBonus;
             b2b = true;
             comboLength += 1;
             move = "TETRIS";
         }
-        score += (pointsAwarded*b2bBonus + comboLength*50 - 50);
+        score += (pointsAwarded + comboLength*50 - 50);
     }
 
 }
 
 function keyPress( key ) {
-    prevMoveIsRotate = false;
     switch ( key ) {
         case 'left':
             if ( valid( -1 ) ) {
@@ -812,7 +813,6 @@ function keyPress( key ) {
                 }
                 for (i = 0; i < tests.length; i++) {
                     if ( valid( tests[i][0], tests[i][1]*-1, rotated[0] ) ) {
-                        prevMoveIsRotate = true;
                         lockDelay.reset();
                         current = rotated[0];
                         currentX += tests[i][0];
@@ -1070,16 +1070,31 @@ function render() {
 
     //default debbie
     if(move != "" && debbieDelay < 1000){
-    	defaltDebbie.start();
+    	defaultDebbie.start();
+        //print "Back to Back"
+        if(b2bBonus == 1.5){
+            ctx.font="Bold 15px Verdana";
+            ctx.fillText("Back",24,100)
+            ctx.fillText("to",24,113)
+            ctx.fillText("Back",24,125)
+        }
+        //print move, eg TSPIN SINGLE
         ctx.font="Bold 20px Verdana";
 	    for (var i = 0; i <= move.length - 1; i++) {
-	    	ctx.fillText(move[i],24,100 + 25*i);
+	    	ctx.fillText(move[i],24,150 + 25*i);
 	    }
+        //print combo length
+        if(comboLength > 1){
+            ctx.font="Bold 25px Verdana";
+            ctx.fillText(comboLength - 1,325,450);
+            ctx.font="Bold 10px Verdana";
+            ctx.fillText("Combo!",325,475);
+        }
     }
     else{
     	move = "";
-    	defaltDebbie.stop();
-    	defaltDebbie.reset();
+    	defaultDebbie.stop();
+    	defaultDebbie.reset();
     }
 }
 
