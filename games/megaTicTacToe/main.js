@@ -141,10 +141,10 @@ function openBoardPage(data) {
         for (var y = 0; y < 9; y++) {
             if (data.board[x][y] == "X") {
                 $("#" + x + "-" + y).removeClass("mtttPossible");
-                $("#" + x + "-" + y).html('<i class="fas fa-times"></i>');
+                $("#" + x + "-" + y).html('<i class="fas fa-times" style="color:#ff5400"> </i>');
             } else if (data.board[x][y] == "O") {
                 $("#" + x + "-" + y).removeClass("mtttPossible");
-                $("#" + x + "-" + y).html('<i class="fas fa-circle-notch"></i>');
+                $("#" + x + "-" + y).html('<i class="fas fa-circle-notch" style="color:#72ff00"> </i>');
             } else if (((data.any && data.turn == discordId) || (data.turn == discordId && x == data.prevMove)) && !data.finished) {
                 $("#" + x + "-" + y).html("");
                 $("#" + x + "-" + y).addClass("mtttPossible");

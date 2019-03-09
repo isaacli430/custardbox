@@ -379,6 +379,9 @@ var prevMoveWasRotate = false;
 var move = "";
 var debbieDelay = 0;
 var b2bBonus = 1;
+//[i,l,j,o,z,s,t]
+var blockColors = ['#017089','#6d4c00','#00377f','#7a7c06','#701010','#004c01','#47004c'];
+var ghostColors = ['#00ddff','#ffae00','#99afff','#f2ff00','#ff5e5e','#00ff4c','#d582ff'];
 
 var renderInterval = 30;
 var tickInterval = 500;
@@ -941,17 +944,20 @@ var SMALL_BLOCK_W = 16;
 var SMALL_BLOCK_H = 16;
 
 // draw a single square at (x, y)
-function drawBlock(x, y) { // if there is a connecting block on each side
+function drawBlock(x, y, color) { // if there is a connecting block on each side
+    ctx.fillStyle = color;
     ctx.fillRect( BLOCK_W * x + 50, BLOCK_H * y, BLOCK_W, BLOCK_H);
     ctx.strokeRect( BLOCK_W * x + 50, BLOCK_H * y, BLOCK_W, BLOCK_H);
 }
 
-function drawSmallBlock(x, y, offsetX, offsetY) { // if there is a connecting block on each side
+function drawSmallBlock(x, y, offsetX, offsetY, color) { // if there is a connecting block on each side
+    ctx.fillStyle = color;
     ctx.fillRect(SMALL_BLOCK_W*x + offsetX, SMALL_BLOCK_W*y + offsetY, SMALL_BLOCK_W, SMALL_BLOCK_W);
     ctx.strokeRect(SMALL_BLOCK_H*x + offsetX, SMALL_BLOCK_H*y + offsetY, SMALL_BLOCK_H, SMALL_BLOCK_H);
 }
 
-function drawShadowBlock(x, y) { // if there is a connecting block on each side
+function drawShadowBlock(x, y, color) { // if there is a connecting block on each side
+    ctx.strokeStyle = color;
     ctx.strokeRect((BLOCK_W*x)+52, (BLOCK_H*y)+2, BLOCK_W-4, BLOCK_H-4);
 }
 
@@ -964,7 +970,7 @@ function render() {
         for ( var y = 0; y < ROWS; ++y ) {
             if ( board[ y ][ x ] ) {
                 ctx.fillStyle = setColor(board[y][x] - 1);
-                drawBlock(x, y);
+                drawBlock(x, y, '#aaaaaa');
             }
         }
     }
@@ -977,7 +983,7 @@ function render() {
     for (var y = 0; y < 4; ++y ) {
         for ( var x = 0; x < 4; ++x ) {
             if ( current[ y ][ x ] ) {
-                drawShadowBlock(currentX + x, currentY + y + yValid - 1);
+                drawShadowBlock(currentX + x, currentY + y + yValid - 1, ghostColors[currentId]);
             }
         }
     }
@@ -988,7 +994,8 @@ function render() {
         for ( var x = 0; x < 4; ++x ) {
             if ( current[ y ][ x ] ) {
                 ctx.fillStyle = setColor(current[y][x] - 1);
-                drawBlock(currentX + x, currentY + y);
+                drawBlock(currentX + x, currentY + y, blockColors[currentId]);
+                
             }
         }
     }
@@ -1024,7 +1031,7 @@ function render() {
         for(var y = 0; y < 4; ++y){
             for(var x = 0; x < 2; ++x){
                 if(heldShape[y][x]) {
-                    drawSmallBlock(x, y, 0.5, 23);
+                    drawSmallBlock(x, y, 0.5, 23, blockColors[heldShapeId]);
                 }
             }
         }
@@ -1034,12 +1041,12 @@ function render() {
         for(var y = 0; y < 4; ++y){
             for(var x = 0; x < 2; ++x){
                 if(heldShape[y][x]) {
-                    drawSmallBlock(x, y, 8, 23);
+                    drawSmallBlock(x, y, 8, 23, blockColors[heldShapeId]);
                 }
             }
         }
     }
-    
+    ctx.fillStyle = theme2;
     ctx.fillText("NEXT",326,8);
     // If shape bag is empty
     if(shapeBag.length == 0){
@@ -1059,7 +1066,7 @@ function render() {
             for(var y = 0; y < 4; ++y){
                 for(var x = 0; x < 2; ++x){
                     if(shape[y][x]) {
-                        drawSmallBlock(x, y, 302, 23 + i*70);
+                        drawSmallBlock(x, y, 302, 23 + i*70, blockColors[id]);
                     }
                 }
             }
@@ -1067,7 +1074,7 @@ function render() {
             for(var y = 0; y < 4; ++y){
                 for(var x = 0; x < 2; ++x){
                     if(shape[y][x]) {
-                        drawSmallBlock(x, y, 310, 17 + i*70);
+                        drawSmallBlock(x, y, 310, 17 + i*70, blockColors[id]);
                     }
                 }
             }
@@ -1075,7 +1082,7 @@ function render() {
             for(var y = 0; y < 4; ++y){
                 for(var x = 0; x < 2; ++x){
                     if(shape[y][x]) {
-                        drawSmallBlock(x, y, 310, 23 + i*70);
+                        drawSmallBlock(x, y, 310, 23 + i*70, blockColors[id]);
                     }
                 }
             }
@@ -1083,6 +1090,7 @@ function render() {
     }
 
     //default debbie
+    ctx.fillStyle = theme2;
     if(move != "" && debbieDelay < 1000){
     	defaultDebbie.start();
         //print "Back to Back"
@@ -1099,10 +1107,10 @@ function render() {
 	    }
         //print combo length
         if(comboLength > 1){
-            ctx.font="Bold 25px Verdana";
-            ctx.fillText(comboLength - 1,325,450);
+            ctx.font="Bold 30px Verdana";
+            ctx.fillText(comboLength - 1,325,400);
             ctx.font="Bold 10px Verdana";
-            ctx.fillText("Combo!",325,475);
+            ctx.fillText("Combo!",325,430);
         }
     }
     else{
