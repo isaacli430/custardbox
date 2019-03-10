@@ -379,8 +379,8 @@ var ghostColors = ['#00ddff','#ffae00','#99afff','#f2ff00','#ff5e5e','#00ff4c','
 var holdLeft = false;
 var holdRight = false;
 var keypress = false;
-const delay = 6;
-var keydownTime = delay;
+const holdDelay = 6;
+var keydownTime = holdDelay;
 var renderInterval = 30;
 var tickInterval = 500;
 var canvas = document.getElementById("tetrisDashCanvas");
@@ -836,12 +836,12 @@ function stopHold(e){
     if (e.keyCode == 37){
         holdLeft = false;
         keypress = false;
-        keydownTime = delay;
+        keydownTime = holdDelay;
     }
     else if (e.keyCode == 39){
         holdRight = false;
         keypress = false;
-        keydownTime = delay;
+        keydownTime = holdDelay;
     }
 
 }
@@ -882,7 +882,7 @@ function render() {
                 ++currentX;
             }
         }
-        else if(keydownTime == delay){
+        else if(keydownTime == holdDelay){
             if ( valid( -1 ) && holdLeft){
                 lockDelay.reset();
                 --currentX;   
