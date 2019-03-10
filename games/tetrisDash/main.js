@@ -376,7 +376,11 @@ var remaining;
 //[i,l,j,o,z,s,t]
 var blockColors = ['#017089','#6d4c00','#00377f','#7a7c06','#701010','#004c01','#47004c'];
 var ghostColors = ['#00ddff','#ffae00','#99afff','#f2ff00','#ff5e5e','#00ff4c','#d582ff'];
-
+var holdLeft = false;
+var holdRight = false;
+var keypress = false;
+const delay = 6;
+var keydownTime = delay;
 var renderInterval = 30;
 var tickInterval = 500;
 var canvas = document.getElementById("tetrisDashCanvas");
@@ -391,6 +395,7 @@ $("#backButton").on("click", goBack);
 function goBack() {
     clearAllIntervals();
     document.removeEventListener("keydown", keydownFunction);
+    document.removeEventListener("keyup", stopHold);
     document.removeEventListener("keydown", restartTetris);
 }
 
@@ -697,18 +702,6 @@ function clearLines() {
 
 function keyPress( key ) {
     switch ( key ) {
-        case 'left':
-            if ( valid( -1 ) ) {
-                lockDelay.reset();
-                --currentX;
-            }
-            break;
-        case 'right':
-            if ( valid( 1 ) ) {
-                lockDelay.reset();
-                ++currentX;
-            }
-            break;
         case 'down':
             if ( valid( 0, 1 ) ) {
                 ++currentY;
@@ -798,6 +791,7 @@ function valid( offsetX, offsetY, newCurrent ) {
 
 function newGame() {
     document.addEventListener("keydown", keydownFunction);
+    document.addEventListener("keyup", stopHold);
     clearAllIntervals();
     intervalRender = setInterval(render, renderInterval);
     interval = setInterval( tick, tickInterval);
@@ -826,11 +820,31 @@ function keydownFunction(e) {
         91: 'rotateOther'
     };
     if (typeof keys[ e.keyCode ] != 'undefined') {
+        if (e.keyCode == 37){
+            keypress = true;
+            holdLeft = true;
+        }
+        else if (e.keyCode == 39){
+            keypress = true;
+            holdRight = true;
+        }
         keyPress( keys[ e.keyCode ] );
         render();
     }
 };
+function stopHold(e){
+    if (e.keyCode == 37){
+        holdLeft = false;
+        keypress = false;
+        keydownTime = delay;
+    }
+    else if (e.keyCode == 39){
+        holdRight = false;
+        keypress = false;
+        keydownTime = delay;
+    }
 
+}
 
 var W = 250, H = 500;
 var BLOCK_W = W / COLS, BLOCK_H = H / ROWS;
@@ -857,6 +871,32 @@ function drawShadowBlock(x, y, color) { // if there is a connecting block on eac
 
 // draws the board and the moving shape
 function render() {
+    if (keypress){
+        if(keydownTime == 0){
+            if ( valid( -1 ) && holdLeft){
+                lockDelay.reset();
+                --currentX;   
+            }
+            else if ( valid( 1 ) && holdRight){
+                lockDelay.reset();
+                ++currentX;
+            }
+        }
+        else if(keydownTime == delay){
+            if ( valid( -1 ) && holdLeft){
+                lockDelay.reset();
+                --currentX;   
+            }
+            else if ( valid( 1 ) && holdRight){
+                lockDelay.reset();
+                ++currentX;
+            }
+        }
+        if(!(keydownTime == 0)){
+            --keydownTime;
+        }
+    }
+
     ctx.clearRect( 50, 0, W, H );
 
     ctx.strokeStyle = theme1;
@@ -1004,6 +1044,7 @@ window.tetrisDashFormatTime = function(time) {
 function gameEnded() {
     lose = false;
     document.removeEventListener("keydown", keydownFunction);
+    document.removeEventListener("keyup", stopHold);
     ctx.globalAlpha = 0.75;
     ctx.fillStyle = theme1;
     ctx.fillRect(0, 0, 350, H);
