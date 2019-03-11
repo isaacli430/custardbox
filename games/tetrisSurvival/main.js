@@ -557,12 +557,44 @@ function addGarbage(holeLocation, lines){
         }
     }
 }
-
 function runSurvivalTetris(){
+    var garbageSchedule = []; //[[interval, lines],[interval,lines],etc]
+    //0:00-2:30
     if (timeInt <= 150){
-        if(timeInt % 15 == 0){
+        garbageSchedule = [[15, 2]];
+    }
+    //2:31-5:00
+    else if (timeInt <= 300){
+        garbageSchedule = [[15, 2],[50,4]];
+    }
+    //5:01-7:30
+    else if (timeInt <= 450){
+        garbageSchedule = [[15, 3],[50,4]];
+    }
+    //7:31-10:00
+    else if (timeInt <= 600){
+        garbageSchedule = [[15, 3],[50,4],[25,1]];
+    }
+    //10:01-12:30
+    else if (timeInt <= 750){
+        garbageSchedule = [[10, 3],[50,4],[25,1]];
+    }
+    //12:31-15:00
+    else if (timeInt <= 900){
+        garbageSchedule = [[10, 3],[50,4],[25,1],[75,6]];
+    }
+    //15:01-17:30
+    else if (timeInt <= 1050){
+        garbageSchedule = [[10, 3],[50,4],[25,1],[75,10]];
+    }
+    //17:30-20:00
+    else if (timeInt <= 1200){
+        garbageSchedule = [[10, 3],[50,4],[15,1],[75,10]];
+    }
+    for (var i = garbageSchedule.length - 1; i >= 0; i--) {
+        if(timeInt % garbageSchedule[i][0] == 0){
             var holeLocation = Math.floor(Math.random() * (COLS+1));
-            addGarbage(holeLocation, 2);
+            addGarbage(holeLocation, garbageSchedule[i][1]);
         }
     }
 }
