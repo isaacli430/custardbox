@@ -374,8 +374,8 @@ var lockDelayInt = 0;
 var failed = true;
 var remaining;
 //[i,l,j,o,z,s,t]
-var blockColors = ['#017089','#6d4c00','#00377f','#7a7c06','#701010','#004c01','#47004c'];
-var ghostColors = ['#00ddff','#ffae00','#99afff','#f2ff00','#ff5e5e','#00ff4c','#d582ff'];
+var blockColors = ['#6CF8FC','#F5A432','#224AFB','#FDF734','#ED4630','#75F013','#AE58FD'];
+var ghostColors = blockColors;
 var holdLeft = false;
 var holdRight = false;
 var keypress = false;
