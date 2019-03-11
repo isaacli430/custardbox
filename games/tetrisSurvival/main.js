@@ -810,48 +810,66 @@ function clearLines() {
         comboLength += 1;
         defaultDebbie.stop();
         defaultDebbie.reset();
-        if (rowsCleared == 1){
-            if(tspin){
-                pointsAwarded = 400*b2bBonus;
-                b2b = true;
-                move = "TSPIN SINGLE";
-            }
-            else{
-                pointsAwarded = 100;
-                move = "SINGLE";
-                b2bBonus = 1;
+        var pc = true;
+        for ( var y = ROWS - 1; y >= 0; --y ) {
+            if(!pc){break;}
+            for ( var x = 0; x < COLS; ++x ) {
+                if ( board[ y ][ x ] != 0 ) {
+                    pc = false;
+                    break;
+                }
             }
         }
-        else if(rowsCleared == 2){
-            if(tspin){
+        if(!pc){
+            if (rowsCleared == 1){
+                if(tspin){
+                    pointsAwarded = 400*b2bBonus;
+                    b2b = true;
+                    move = "TSPIN SINGLE";
+                }
+                else{
+                    pointsAwarded = 100;
+                    move = "SINGLE";
+                    b2bBonus = 1;
+                }
+            }
+            else if(rowsCleared == 2){
+                if(tspin){
+                    pointsAwarded = 800*b2bBonus;
+                    b2b = true;
+                    move = "TSPIN DOUBLE";
+                }
+                else{
+                    pointsAwarded = 300;
+                    move = "DOUBLE";
+                    b2bBonus = 1;
+                }
+            }
+            else if(rowsCleared == 3){
+                if(tspin){
+                    pointsAwarded = 1600*b2bBonus;
+                    b2b = true;
+                    move = "TSPIN TRIPLE";
+                }
+                else{
+                    pointsAwarded = 500
+                    move = "Triple";
+                    b2bBonus = 1;
+                }
+            }
+            else if(rowsCleared == 4){
                 pointsAwarded = 800*b2bBonus;
                 b2b = true;
-                move = "TSPIN DOUBLE";
+                move = "TETRIS";
             }
-            else{
-                pointsAwarded = 300;
-                move = "DOUBLE";
-                b2bBonus = 1;
-            }
+            score += (pointsAwarded + comboLength*50 - 50);
         }
-        else if(rowsCleared == 3){
-            if(tspin){
-                pointsAwarded = 1600*b2bBonus;
-                b2b = true;
-                move = "TSPIN TRIPLE";
-            }
-            else{
-                pointsAwarded = 500
-                move = "Triple";
-                b2bBonus = 1;
-            }
+        else{
+            move = "PERFECT CLEAR";
+            score += 2500;
         }
-        else if(rowsCleared == 4){
-            pointsAwarded = 800*b2bBonus;
-            b2b = true;
-            move = "TETRIS";
-        }
-        score += (pointsAwarded + comboLength*50 - 50);
+
+        
     }
 
 }
