@@ -1272,9 +1272,19 @@
 
     $(document).keydown(function (e) {
         if (e.which == 27 && ($("#messagePage").is(":visible") || $("#gameArea").is(":visible"))) {
+            if($("#tetrisSurvivalCanvas").is(":visible")){
+                e.preventDefault();
+                $("#tetrisSurvivalCanvas").hide();
+                $("#tetrisSurvivalMenu").show();
+            }
+            else{
+                e.preventDefault();
+                $(".modal").modal("hide");
+                goBack();
+            }
+        }
+        else if($("#tetrisSurvivalCanvas").is(":visible") && (e.which == 38 || e.which == 40 || e.which == 32)){
             e.preventDefault();
-            $(".modal").modal("hide");
-            goBack();
         }
         else if ($("#friends").is(":visible")) {
             var input = document.getElementById("friendsSearch");
