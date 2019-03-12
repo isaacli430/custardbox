@@ -1338,22 +1338,18 @@ function render() {
     ctx.fillStyle = theme2;
     if(move != "" && debbieDelay < 1000){
     	defaultDebbie.start();
-        //print "Back to Back"
-        if(b2bBonus == 1.5){
-            ctx.font="Bold 15px Verdana";
-            ctx.fillText("Back",24,100)
-            ctx.fillText("to",24,113)
-            ctx.fillText("Back",24,125)
-        }
         //print move, eg TSPIN SINGLE
-        ctx.font="Bold 30px Verdana";
+        if(b2bBonus == 1.5){
+            ctx.fillText("Back to Back",150,80)
+        }
+        ctx.font="Bold 25px Verdana";
         ctx.fillStyle = 'orange';
-        ctx.fillText(move,200,50);
+        ctx.fillText(move,150,100);
         //print combo length
         ctx.fillStyle = 'green';
         if(comboLength > 1){
-            ctx.font="Bold 30px Verdana";
-            ctx.fillText(comboLength - 1 + "Combo!",200,200);
+            ctx.font="Bold 20px Verdana";
+            ctx.fillText(comboLength - 1 + "Combo!",150,120);
         }
     }
     else{
@@ -1364,7 +1360,7 @@ function render() {
 
     //draw red bar
 	ctx.fillStyle = 'red';
-    ctx.fillRect(10, 500, 30, -10*barHeight(redBar));
+    ctx.fillRect(10, 500, 30, -20*barHeight(redBar));
 }
 
 function tetrisSurvivalFormatTime(time){
