@@ -416,7 +416,7 @@ function goBack() {
     clearAllIntervals();
     document.removeEventListener("keydown", keydownFunction);
     document.removeEventListener("keyup", stopHold);
-    document.removeEventListener("keydown", startTetris);
+    document.removeEventListener("keydown", restartTetris);
 }
 
 var Stopwatch = function(changeVar, options) {
@@ -483,7 +483,7 @@ var Stopwatch = function(changeVar, options) {
     this.reset  = reset;
 };
 
-var timer = new Stopwatch('timeInt', {delay: 300});
+var timer = new Stopwatch('timeInt', {delay: 50});
 var lockDelay = new Stopwatch('lockDelayInt', {delay: 100});
 var defaultDebbie = new Stopwatch('debbieDelay', {delay: 30});
 
@@ -554,16 +554,30 @@ chrome.storage.local.get(["theme"], function(result) {
             init();
         }
         canvas.style.display = 'none';
-        var btn = document.createElement("button");
-        btn.innerHTML = 'Start';
-        btn.onclick = function(){
+        //resume btn
+        var resumeBtn = document.createElement("button");
+        resumeBtn.innerHTML = 'Resume';
+        resumeBtn.style.backgroundColor = 'green';
+        resumeBtn.onclick = function(){
             $("body").css("overflow", "hidden");
             menu.style.display = 'none';
             canvas.style.display = 'initial';
             newGame();
         };
-       menu.appendChild(btn);
-        document.addEventListener("keydown", startTetris);
+        document.getElementById('resume/restart').appendChild(resumeBtn);
+
+        //restart btn
+        var restartBtn = document.createElement("button");
+        restartBtn.innerHTML = 'Start/Restart';
+        restartBtn.style.backgroundColor = 'red';
+        restartBtn.onclick = function(){
+            $("body").css("overflow", "hidden");
+            menu.style.display = 'none';
+            canvas.style.display = 'initial';
+            init();
+            newGame();
+        };
+        document.getElementById('resume/restart').appendChild(restartBtn);
     });
 });
 
@@ -624,6 +638,16 @@ function runSurvivalTetris(){
         if(timeInt % garbageSchedule[i][0] == 0){
             redBar.push(garbageSchedule[i][1]);
         }
+    }
+
+    //checkpoint every 5m
+    if(timeInt % 30 == 0){
+    	var save = {};
+		chrome.storage.local.get(["tetrisSurvivalGameBoard"]), function(result){
+			save = result.tetrisSurvivalGameBoard;
+		}
+    	chrome.storage.local.set({tetrisSurvivalCheckpoint: save});
+    	
     }
 }
 
@@ -1363,11 +1387,21 @@ function gameEnded() {
         ctx.font="14px Verdana";
         ctx.fillText("Press R To Restart",175,190);
         ctx.fillText("Press Enter To View Leaderboard",175,206);
-        chrome.storage.local.set({tetrisSurvivalGameBoard: {}});
+        var checkpoint = undefined;
+        chrome.storage.local.get(["tetrisSurvivalCheckpoint"]), function(result){
+        	if(Object.keys(result).length != 0 && Object.keys(result.tetrisSurvivalCheckpoint).length != 0){
+        		checkpoint = result.tetrisSurvivalCheckpoint;
+        	}
+        	else{
+        		init();
+        		tick();
+        	}
+        };
+
     });
 }
 
-function startTetris(event){
+function restartTetris(event){
     if(event.keyCode==82){
         init();
         newGame();
