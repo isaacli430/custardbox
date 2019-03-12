@@ -101,15 +101,14 @@ socket.on("mtttGame", function (reply) {
         openBoardPage(data);
     }
     else if (response === "refreshBoard") {
-        if (data.opponentId = clickedGame.opponentId) {
+        if (data.opponentId == clickedGame.opponentId) {
             openBoardPage(data);
         }
     }
 });
 
 function startGame() {
-    $("#mtttOpponentName").text(clickedGame.opponentName);
-
+    $("#mtttName").html(clickedGame.opponentName);
     $("#mtttTable").show();
     $("#mtttSelectGame").hide();
     for (var x = 0; x < 9; x++) {
@@ -123,11 +122,10 @@ function startGame() {
 
 function openBoardPage(data) {
     clickedGame = { opponentId: data.opponentId, opponentName: data.opponentName }
-    $("#mtttOpponentName").text(clickedGame.opponentName);
 
     $("#mtttTable").show();
     $("#mtttSelectGame").hide();
-    $("#mtttName").html(clickedGame.opponentName);
+    $("#mtttName").html(data.opponentName);
 
     if (data.finished) {
         if (data.victory == null) {

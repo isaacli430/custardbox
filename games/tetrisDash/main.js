@@ -375,7 +375,7 @@ var failed = true;
 var remaining;
 //[i,l,j,o,z,s,t]
 var blockColors = ['#6CF8FC','#F5A432','#224AFB','#FDF734','#ED4630','#75F013','#AE58FD'];
-var ghostColors = blockColors;
+var ghostColors;
 var holdLeft = false;
 var holdRight = false;
 var keypress = false;
@@ -490,6 +490,7 @@ chrome.storage.local.get(["theme"], function(result) {
             theme6 = result["customThemes"][themeName]["theme6"];
         });
     }
+    ghostColors = [theme3, theme3, theme3, theme3, theme3, theme3, theme3];
     chrome.storage.local.get(["tetrisDashGameBoard"], function(result) {
         if(Object.keys(result).length != 0 && Object.keys(result.tetrisDashGameBoard).length != 0){
             board = result.tetrisDashGameBoard.board;

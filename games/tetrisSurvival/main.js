@@ -381,7 +381,7 @@ var keydownTime = holdDelay;
 
 //[i,l,j,o,z,s,t]
 var blockColors = ['#6CF8FC','#F5A432','#224AFB','#FDF734','#ED4630','#75F013','#AE58FD'];
-var ghostColors = blockColors;
+var ghostColors;
 
 //ultra variables
 var score = 0;
@@ -521,6 +521,7 @@ chrome.storage.local.get(["theme"], function(result) {
             theme6 = result["customThemes"][themeName]["theme6"];
         });
     }
+    ghostColors = [theme3, theme3, theme3, theme3, theme3, theme3, theme3];
     chrome.storage.local.get(["tetrisSurvivalGameBoard"], function(result) {
         if(Object.keys(result).length != 0 && Object.keys(result.tetrisSurvivalGameBoard).length != 0){
             board = result.tetrisSurvivalGameBoard.board;
