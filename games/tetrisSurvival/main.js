@@ -389,6 +389,8 @@ var keypress = false;
 const holdDelay = 6;
 var keydownTime = holdDelay;
 
+var redBar = [];
+
 var renderInterval = 30;
 var tickInterval = 500;
 var canvas = document.getElementById("tetrisSurvivalCanvas");
@@ -593,10 +595,17 @@ function runSurvivalTetris(){
     }
     for (var i = garbageSchedule.length - 1; i >= 0; i--) {
         if(timeInt % garbageSchedule[i][0] == 0){
-            var holeLocation = Math.floor(Math.random() * (COLS+1));
-            addGarbage(holeLocation, garbageSchedule[i][1]);
+            redBar.push(garbageSchedule[i][1]);
         }
     }
+}
+
+function barHeight(redBar){
+	var result = 0;
+	for (var i = redBar.length - 1; i >= 0; i--) {
+		result += redBar[i];
+	}
+	return result;
 }
 
 // create a new 4x4 shape in global variable 'current'
@@ -661,6 +670,7 @@ function init() {
     tspin = false;
     move = "";
     debbieDelay = 0;
+    redBar = [];
     newShape();
 }
 
@@ -804,6 +814,11 @@ function clearLines() {
     }
     if(rowsCleared == 0){
         comboLength = 0;
+        for (var i = redBar.length - 1; i >= 0; i--) {
+        	var holeLocation = Math.floor(Math.random()*COLS);
+        	addGarbage(holeLocation, redBar[i]);
+        }
+        redBar = [];
     }
     else{
         b2b = false;
@@ -862,11 +877,25 @@ function clearLines() {
                 b2b = true;
                 move = "TETRIS";
             }
-            score += (pointsAwarded + comboLength*50 - 50);
+            pointsAwarded += (comboLength*50 - 50);
         }
         else{
             move = "PERFECT CLEAR";
-            score += 2500;
+            pointsAwarded = 2500;
+        }
+
+        //200pts per line
+        var garbageSubtracted = Math.ceil(pointsAwarded/200);
+        while(garbageSubtracted != 0){
+        	if(garbageSubtracted >= redBar[redBar.length - 1]){
+        		garbageSubtracted -= redBar[redBar.length - 1];
+        		redBar.pop();
+        	}
+        	else{
+        		redBar[redBar.length - 1] -= garbageSubtracted;
+        		garbageSubtracted = 0;
+        	}
+
         }
 
         
@@ -1048,6 +1077,7 @@ function drawShadowBlock(x, y, color) { // if there is a connecting block on eac
     ctx.strokeRect((BLOCK_W*x)+52, (BLOCK_H*y)+2, BLOCK_W-4, BLOCK_H-4);
 }
 
+
 // draws the board and the moving shape
 function render() {
     //quick move left & right
@@ -1078,6 +1108,7 @@ function render() {
     }
 //reset board
     ctx.clearRect( 50, 0, W, H );
+
 //draw settled blocks
     ctx.strokeStyle = theme1;
     for ( var x = 0; x < COLS; ++x ) {
@@ -1215,16 +1246,14 @@ function render() {
             ctx.fillText("Back",24,125)
         }
         //print move, eg TSPIN SINGLE
-        ctx.font="Bold 20px Verdana";
-	    for (var i = 0; i <= move.length - 1; i++) {
-	    	ctx.fillText(move[i],24,150 + 25*i);
-	    }
+        ctx.font="Bold 30px Verdana";
+        ctx.fillStyle = 'orange';
+        ctx.fillText(move,200,50);
         //print combo length
+        ctx.fillStyle = 'green';
         if(comboLength > 1){
             ctx.font="Bold 30px Verdana";
-            ctx.fillText(comboLength - 1,325,400);
-            ctx.font="Bold 10px Verdana";
-            ctx.fillText("Combo!",325,430);
+            ctx.fillText(comboLength - 1 + "Combo!",200,200);
         }
     }
     else{
@@ -1232,9 +1261,13 @@ function render() {
     	defaultDebbie.stop();
     	defaultDebbie.reset();
     }
+
+    //draw red bar
+	ctx.fillStyle = 'red';
+    ctx.fillRect(10, 500, 30, -10*barHeight(redBar));
 }
 
-window.tetrisSurvivalFormatTime = function(time) {
+function tetrisSurvivalFormatTime(time){
     var minutes = Math.floor(time/60).toString();
     var seconds = (time % 60).toString();
     if(seconds.length == 1){
