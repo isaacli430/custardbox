@@ -372,6 +372,19 @@ var canHoldShape = true;
 var timeInt = 0;
 var lockDelayInt = 0;
 var failed = true;
+
+//moving left & right
+var holdLeft = false;
+var holdRight = false;
+var keypress = false;
+const holdDelay = 6;
+var keydownTime = holdDelay;
+
+//[i,l,j,o,z,s,t]
+var blockColors = ['#6CF8FC','#F5A432','#224AFB','#FDF734','#ED4630','#75F013','#AE58FD'];
+var ghostColors = blockColors;
+
+//ultra variables
 var b2b = false;
 var comboLength = 0;
 var tspin = false;
@@ -379,24 +392,17 @@ var prevMoveWasRotate = false;
 var move = "";
 var debbieDelay = 0;
 var b2bBonus = 1;
-//[i,l,j,o,z,s,t]
-var blockColors = ['#6CF8FC','#F5A432','#224AFB','#FDF734','#ED4630','#75F013','#AE58FD'];
-var ghostColors = blockColors;
+const corners = [[3,2],[1,2],[3,0],[1,0]];
 
-var holdLeft = false;
-var holdRight = false;
-var keypress = false;
-const holdDelay = 6;
-var keydownTime = holdDelay;
-
+//survival variables
 var redBar = [];
 
+//basic variables
 var renderInterval = 30;
 var tickInterval = 500;
 var canvas = document.getElementById("tetrisSurvivalCanvas");
 var ctx = canvas.getContext('2d');
 
-const corners = [[3,2],[1,2],[3,0],[1,0]];
 
 // On games tab close
 $('#games-tab').on('hide.bs.tab', goBack);
@@ -522,6 +528,14 @@ chrome.storage.local.get(["theme"], function(result) {
             shapeBag = result.tetrisSurvivalGameBoard.shapeBag;
             timeInt = result.tetrisSurvivalGameBoard.time;
             lockDelayInt = result.tetrisSurvivalGameBoard.lockDelay;
+            b2b = result.tetrisSurvivalGameBoard.b2b;
+            comboLength = result.tetrisSurvivalGameBoard.comboLength;
+            tspin = result.tetrisSurvivalGameBoard.tspin;
+            prevMoveWasRotate = result.tetrisSurvivalGameBoard.prevMoveWasRotate;
+            move = result.tetrisSurvivalGameBoard.move;
+            debbieDelay = result.tetrisSurvivalGameBoard.debbieDelay;
+            b2bBonus = result.tetrisSurvivalGameBoard.b2bBonus;
+            redBar = result.tetrisSurvivalGameBoard.redBar;
 
             if(board == undefined){
                 board = result.tetrisSurvivalGameBoard[0];
@@ -674,6 +688,10 @@ function init() {
     newShape();
 }
 
+function loadSave(){
+    //set board to saved board & all variables to saved variables
+}
+
 // keep the element moving down, creating new shapes and clearing lines
 function tick(key) {
     if(!$("#tetrisSurvivalCanvas").is(":visible")){
@@ -712,7 +730,15 @@ function tick(key) {
                                                     canHoldShape: canHoldShape,
                                                     shapeBag: shapeBag,
                                                     time: timeInt,
-                                                    lockDelay: lockDelayInt
+                                                    lockDelay: lockDelayInt,
+                                                    redBar: redBar,
+                                                    b2b: b2b,
+                                                    comboLength: comboLength,
+                                                    tspin: tspin,
+                                                    prevMoveWasRotate: prevMoveWasRotate,
+                                                    move: move,
+                                                    debbieDelay: debbieDelay,
+                                                    b2bBonus: b2bBonus
                                                     }});
 }
 
