@@ -521,7 +521,7 @@ chrome.storage.local.get(["theme"], function(result) {
             theme6 = result["customThemes"][themeName]["theme6"];
         });
     }
-    ghostColors = [theme3, theme3, theme3, theme3, theme3, theme3, theme3];
+    ghostColors = [theme2, theme2, theme2, theme2, theme2, theme2, theme2];
     chrome.storage.local.get(["tetrisSurvivalGameBoard"], function(result) {
         if(Object.keys(result).length != 0 && Object.keys(result.tetrisSurvivalGameBoard).length != 0){
             board = result.tetrisSurvivalGameBoard.board;
