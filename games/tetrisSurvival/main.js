@@ -370,7 +370,6 @@ var currentId;
 var canHoldShape = true;
 var timeInt = 0;
 var lockDelayInt = 0;
-var failed = true;
 
 //moving left & right
 var holdLeft = false;
@@ -397,9 +396,7 @@ const corners = [[3,2],[1,2],[3,0],[1,0]];
 //survival variables
 var redBar = [];
 var powerup = $("#powerups").val();
-var powerupName = $("#powerups :selected").text();
-//[clone,clear,shield,x2 score]
-var powerupCosts = [3000,1500,2000,1000];
+var powerupCosts = {'Clone Tetrimino': 3000,'Clear Lines':1500,'Freeze':2000,'Double Score':1000};
 
 //basic variables
 var renderInterval = 30;
@@ -524,27 +521,31 @@ chrome.storage.local.get(["theme"], function(result) {
     ghostColors = [theme2, theme2, theme2, theme2, theme2, theme2, theme2];
     chrome.storage.local.get(["tetrisSurvivalGameBoard"], function(result) {
         if(Object.keys(result).length != 0 && Object.keys(result.tetrisSurvivalGameBoard).length != 0){
-            board = result.tetrisSurvivalGameBoard.board;
-            currentX = result.tetrisSurvivalGameBoard.currentX;
-            currentY = result.tetrisSurvivalGameBoard.currentY;
-            current = result.tetrisSurvivalGameBoard.current;
-            heldShapeId = result.tetrisSurvivalGameBoard.heldShapeId;
-            currentId = result.tetrisSurvivalGameBoard.currentId;
-            canHoldShape = result.tetrisSurvivalGameBoard.canHoldShape;
-            shapeBag = result.tetrisSurvivalGameBoard.shapeBag;
-            timeInt = result.tetrisSurvivalGameBoard.time;
-            score = result.tetrisSurvivalGameBoard.score;
-            lockDelayInt = result.tetrisSurvivalGameBoard.lockDelay;
-            b2b = result.tetrisSurvivalGameBoard.b2b;
-            comboLength = result.tetrisSurvivalGameBoard.comboLength;
-            tspin = result.tetrisSurvivalGameBoard.tspin;
-            prevMoveWasRotate = result.tetrisSurvivalGameBoard.prevMoveWasRotate;
-            move = result.tetrisSurvivalGameBoard.move;
-            debbieDelay = result.tetrisSurvivalGameBoard.debbieDelay;
-            b2bBonus = result.tetrisSurvivalGameBoard.b2bBonus;
-            redBar = result.tetrisSurvivalGameBoard.redBar;
-            powerup = result.tetrisSurvivalGameBoard.powerup;
-
+        	if(result.tetrisSurvivalGameBoard.lose || lose){
+        		init();
+        	}
+        	else{
+        		board = result.tetrisSurvivalGameBoard.board;
+	            currentX = result.tetrisSurvivalGameBoard.currentX;
+	            currentY = result.tetrisSurvivalGameBoard.currentY;
+	            current = result.tetrisSurvivalGameBoard.current;
+	            heldShapeId = result.tetrisSurvivalGameBoard.heldShapeId;
+	            currentId = result.tetrisSurvivalGameBoard.currentId;
+	            canHoldShape = result.tetrisSurvivalGameBoard.canHoldShape;
+	            shapeBag = result.tetrisSurvivalGameBoard.shapeBag;
+	            timeInt = result.tetrisSurvivalGameBoard.time;
+	            score = result.tetrisSurvivalGameBoard.score;
+	            lockDelayInt = result.tetrisSurvivalGameBoard.lockDelay;
+	            b2b = result.tetrisSurvivalGameBoard.b2b;
+	            comboLength = result.tetrisSurvivalGameBoard.comboLength;
+	            tspin = result.tetrisSurvivalGameBoard.tspin;
+	            prevMoveWasRotate = result.tetrisSurvivalGameBoard.prevMoveWasRotate;
+	            move = result.tetrisSurvivalGameBoard.move;
+	            debbieDelay = result.tetrisSurvivalGameBoard.debbieDelay;
+	            b2bBonus = result.tetrisSurvivalGameBoard.b2bBonus;
+	            redBar = result.tetrisSurvivalGameBoard.redBar;
+	            powerup = result.tetrisSurvivalGameBoard.powerup;
+        	}
             if(board == undefined){
                 board = result.tetrisSurvivalGameBoard[0];
                 newShape();
@@ -557,6 +558,7 @@ chrome.storage.local.get(["theme"], function(result) {
         else{
             init();
         }
+        //menu page
         canvas.style.display = 'none';
         //resume btn
         var resumeBtn = document.createElement("button");
@@ -586,11 +588,12 @@ chrome.storage.local.get(["theme"], function(result) {
 });
 
 function activatePowerup(powerup){
-    if(powerup == 0){
+	score -= powerupCosts[powerup];
+    if(powerup == 'Clone Tetrimino'){
         //next 5 blocks is the same as the current one
         shapeBag.push(currentId, currentId, currentId, currentId, currentId);
     }
-    else if(powerup == 1){
+    else if(powerup == 'Clear Lines'){
         //clear 4 lines
         for (var y = ROWS - 1; y >= 4; y--) {
             for (var x = COLS - 1; x >= 0; x--) {
@@ -603,15 +606,75 @@ function activatePowerup(powerup){
             }
         }
     }
-    else if(powerup == 2){
+    else if(powerup == 'Freeze'){
         //don't increase the red bar & dont send garbage for 20s
     }
-    else if(powerup == 3){
+    else if(powerup == 'Double Score'){
         //x2 score for 30s
     }
 }
 
-//add garbage lines
+
+function checkpoint(cmd){
+	if(cmd == 'save'){
+		chrome.storage.local.set({tetrisSurvivalCheckpoint: {
+			board: board, 
+            currentX: currentX, 
+            currentY: currentY, 
+            current: current,
+            heldShapeId: heldShapeId,
+            currentId: currentId,
+            canHoldShape: canHoldShape,
+            shapeBag: shapeBag,
+            time: timeInt,
+            score: score,
+            lockDelay: lockDelayInt,
+            redBar: redBar,
+            b2b: b2b,
+            comboLength: comboLength,
+            tspin: tspin,
+            prevMoveWasRotate: prevMoveWasRotate,
+            move: move,
+            debbieDelay: debbieDelay,
+            b2bBonus: b2bBonus,
+            powerup: powerup,
+            lose: lose
+            }});
+	}
+	else if(cmd == 'load'){
+		chrome.storage.local.get(["tetrisSurvivalCheckpoint"], function(result) {
+			if(Object.keys(result).length != 0 && Object.keys(result.tetrisSurvivalGameBoard).length != 0){
+	        	if(result.tetrisSurvivalCheckpoint.lose){
+	        		board = result.tetrisSurvivalCheckpoint.board;
+		            currentX = result.tetrisSurvivalCheckpoint.currentX;
+		            currentY = result.tetrisSurvivalCheckpoint.currentY;
+		            current = result.tetrisSurvivalCheckpoint.current;
+		            heldShapeId = result.tetrisSurvivalCheckpoint.heldShapeId;
+		            currentId = result.tetrisSurvivalCheckpoint.currentId;
+		            canHoldShape = result.tetrisSurvivalCheckpoint.canHoldShape;
+		            shapeBag = result.tetrisSurvivalCheckpoint.shapeBag;
+		            timeInt = result.tetrisSurvivalCheckpoint.time;
+		            score = result.tetrisSurvivalCheckpoint.score;
+		            lockDelayInt = result.tetrisSurvivalCheckpoint.lockDelay;
+		            b2b = result.tetrisSurvivalCheckpoint.b2b;
+		            comboLength = result.tetrisSurvivalCheckpoint.comboLength;
+		            tspin = result.tetrisSurvivalCheckpoint.tspin;
+		            prevMoveWasRotate = result.tetrisSurvivalCheckpoint.prevMoveWasRotate;
+		            move = result.tetrisSurvivalCheckpoint.move;
+		            debbieDelay = result.tetrisSurvivalCheckpoint.debbieDelay;
+		            b2bBonus = result.tetrisSurvivalCheckpoint.b2bBonus;
+		            redBar = result.tetrisSurvivalCheckpoint.redBar;
+		            powerup = result.tetrisSurvivalCheckpoint.powerup;
+		            lose = false;
+		            return true;
+	        	}
+		
+			}
+			return false;
+		});
+	}
+}
+
 function addGarbage(holeLocation, lines){
     for (var i = 0; i < lines; i++) {
         for ( var y = 0; y <= ROWS-2; ++y ) {
@@ -633,40 +696,44 @@ function runSurvivalTetris(){
     var garbageSchedule = []; //[[interval, lines],[interval,lines],etc]
     //0:00-2:30
     if (timeInt <= 150){
-        garbageSchedule = [[15, 2]];
+        garbageSchedule = [[10, 2]];
     }
     //2:31-5:00
     else if (timeInt <= 300){
-        garbageSchedule = [[15, 2],[50,4]];
+        garbageSchedule = [[10, 2],[30,4]];
     }
     //5:01-7:30
     else if (timeInt <= 450){
-        garbageSchedule = [[15, 3],[50,4]];
+        garbageSchedule = [[10, 3],[30,4]];
     }
     //7:31-10:00
     else if (timeInt <= 600){
-        garbageSchedule = [[15, 3],[50,4],[25,1]];
+        garbageSchedule = [[10, 3],[30,4],[20,1]];
     }
     //10:01-12:30
     else if (timeInt <= 750){
-        garbageSchedule = [[10, 3],[50,4],[25,1]];
+        garbageSchedule = [[10, 3],[30,4],[20,1]];
     }
     //12:31-15:00
     else if (timeInt <= 900){
-        garbageSchedule = [[10, 3],[50,4],[25,1],[75,6]];
+        garbageSchedule = [[10, 3],[30,4],[20,1],[50,6]];
     }
     //15:01-17:30
     else if (timeInt <= 1050){
-        garbageSchedule = [[10, 3],[50,4],[25,1],[75,10]];
+        garbageSchedule = [[10, 3],[30,4],[20,1],[50,10]];
     }
     //17:30-20:00
     else if (timeInt <= 1200){
-        garbageSchedule = [[10, 3],[50,4],[15,1],[75,10]];
+        garbageSchedule = [[10, 3],[30,4],[15,1],[50,10]];
     }
     for (var i = garbageSchedule.length - 1; i >= 0; i--) {
         if(timeInt % garbageSchedule[i][0] == 0){
             redBar.push(garbageSchedule[i][1]);
         }
+    }
+
+    if(timeInt % 300 == 0){
+//    	checkpoint('save');
     }
 
 
@@ -732,7 +799,6 @@ function init() {
     lockDelay.reset();
     shapeBag = [];
     score = 0;
-    failed = true;
     heldShapeId = undefined;
     currentId = undefined;
     canHoldShape = true;
@@ -744,6 +810,7 @@ function init() {
     debbieDelay = 0;
     redBar = [];
     powerup = $("#powerups").val();
+    lose = false;
     newShape();
 }
 
@@ -768,7 +835,7 @@ function tick(key) {
             valid(0, 1);
             clearLines();
             if (lose) {
-                chrome.storage.local.set({tetrisSurvivalGameBoard: undefined});
+                chrome.storage.local.set({tetrisSurvivalGameBoard: {lose: true}});
                 clearAllIntervals();
                 timer.stop();
                 setTimeout(gameEnded, 30);
@@ -780,28 +847,32 @@ function tick(key) {
             lockDelay.reset();
         }
     }
-
-    chrome.storage.local.set({tetrisSurvivalGameBoard: {board: board, 
-                                                    currentX: currentX, 
-                                                    currentY: currentY, 
-                                                    current: current,
-                                                    heldShapeId: heldShapeId,
-                                                    currentId: currentId,
-                                                    canHoldShape: canHoldShape,
-                                                    shapeBag: shapeBag,
-                                                    time: timeInt,
-                                                    score: score,
-                                                    lockDelay: lockDelayInt,
-                                                    redBar: redBar,
-                                                    b2b: b2b,
-                                                    comboLength: comboLength,
-                                                    tspin: tspin,
-                                                    prevMoveWasRotate: prevMoveWasRotate,
-                                                    move: move,
-                                                    debbieDelay: debbieDelay,
-                                                    b2bBonus: b2bBonus,
-                                                    powerup: powerup
-                                                    }});
+    if(!lose){
+    	chrome.storage.local.set({tetrisSurvivalGameBoard: {
+			board: board, 
+            currentX: currentX, 
+            currentY: currentY, 
+            current: current,
+            heldShapeId: heldShapeId,
+            currentId: currentId,
+            canHoldShape: canHoldShape,
+            shapeBag: shapeBag,
+            time: timeInt,
+            score: score,
+            lockDelay: lockDelayInt,
+            redBar: redBar,
+            b2b: b2b,
+            comboLength: comboLength,
+            tspin: tspin,
+            prevMoveWasRotate: prevMoveWasRotate,
+            move: move,
+            debbieDelay: debbieDelay,
+            b2bBonus: b2bBonus,
+            powerup: powerup,
+            lose: false
+            }});
+    }
+    
 }
 
 // stop shape at its position and fix it to board
@@ -1063,7 +1134,6 @@ function keyPress( key ) {
             break;
         case 'powerup':
             if(score >= powerupCosts[powerup]){
-                score -= powerupCosts[powerup];
                 activatePowerup(powerup);
             }
     }
@@ -1098,6 +1168,10 @@ function valid( offsetX, offsetY, newCurrent ) {
 }
 
 function newGame() {
+	chrome.storage.local.get(["tetrisSurvivalGameBoard"], function(result) {
+		//score = result.tetrisSurvivalGameBoard.powerup;
+
+	});
     document.addEventListener("keydown", keydownFunction);
     document.addEventListener("keyup", stopHold);
     clearAllIntervals();
@@ -1258,7 +1332,7 @@ function render() {
         ctx.fillStyle = 'green';
       }
       ctx.fillText("Score: "+score+"/"+powerupCosts[powerup],60,35);
-      ctx.fillText(powerupName,60,55);
+      ctx.fillText(powerup,60,55);
 
     // Draw hold and next piece
     ctx.fillStyle = theme5;
@@ -1374,7 +1448,6 @@ function tetrisSurvivalFormatTime(time){
 }
 
 function gameEnded() {
-    lose = false;
     document.removeEventListener("keydown", keydownFunction);
     document.removeEventListener("keyup", stopHold);
     ctx.globalAlpha = 0.75;
@@ -1408,7 +1481,7 @@ function gameEnded() {
             ctx.font="20px Verdana";
             ctx.fillText("New High Score!: "+tetrisSurvivalFormatTime(timeInt),175,130);
         }
-        else if (!failed) {
+        else{
             var gameHighscore = result["gameHighScore"][game];
             ctx.font="20px Verdana";
             ctx.fillText("Time Alive: "+timeInt,175,130);
@@ -1417,8 +1490,8 @@ function gameEnded() {
             gameHighScore(game, gameHighscore);
         }
         ctx.font="14px Verdana";
-        ctx.fillText("Press R To Restart",175,190);
-        ctx.fillText("Press Enter To View Leaderboard",175,206);
+        ctx.fillText("Press ESC To Return To The Menu",175,190);
+        //ctx.fillText("Press Enter To View Leaderboard",175,206);
 
     });
 }
