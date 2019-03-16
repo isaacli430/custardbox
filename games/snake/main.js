@@ -322,8 +322,8 @@
                 growthspeed -= 1;
             }
             else if (score % 250 == 0){
-//                    rest = true;
                 createFood();
+                ADD_LENGTH = Math.ceil(1.5*ADD_LENGTH);
             }
             else if (score <= 1000 && score % 125 == 0 && 500 < score){
                 rest = false;
