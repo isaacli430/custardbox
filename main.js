@@ -1274,6 +1274,7 @@
         if (e.which == 27 && ($("#messagePage").is(":visible") || $("#gameArea").is(":visible"))) {
             if($("#tetrisSurvivalCanvas").is(":visible")){
                 e.preventDefault();
+                $(".modal").modal("hide");
                 $("#tetrisSurvivalCanvas").hide();
                 $("#tetrisSurvivalMenu").show();
             }

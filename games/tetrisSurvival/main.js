@@ -370,6 +370,16 @@ var currentId;
 var canHoldShape = true;
 var timeInt = 0;
 var lockDelayInt = 0;
+var keys = {
+    37: 'left',
+    39: 'right',
+    40: 'down',
+    38: 'rotate',
+    32: 'drop',
+    16: 'hold',
+    17: 'rotateOther',
+    81: 'powerup'
+};
 
 //moving left & right
 var holdLeft = false;
@@ -395,12 +405,15 @@ const corners = [[3,2],[1,2],[3,0],[1,0]];
 
 //survival variables
 var redBar = [];
+const handicaps = [['No Hold',30],['High Gravity',30],['No Rotate',20],['Blind',20],['Reverse Controls',45]];
+var currentHandicap = ['',0];
+var nextEvent = ['',0];
 var powerup = $("#powerups").val();
-const powerupCosts = {'Clone Tetrimino': 1500,'Clear Lines':2500,'Freeze':2000,'Double Score':2000};
+const powerupCosts = {'Clone Tetrimino': 3000,'Clear Lines':4000,'Freeze':4000,'Double Score':2000};
 var haveCheckpoint = true;
 	//powerup vars
 var powerupExpiryDate = -1;
-var powerupVars = {'frozen': false, 'scoreMultiplier': 1}
+var powerupVars = {'frozen': false, 'scoreMultiplier': 1};
 
 //basic variables
 var renderInterval = 30;
@@ -417,6 +430,9 @@ $('#games-tab').on('hide.bs.tab', goBack);
 $("#backButton").on("click", goBack);
 
 function goBack() {
+	timer.stop();
+	lockDelay.stop();
+	defaultDebbie.stop();
     clearAllIntervals();
     document.removeEventListener("keydown", keydownFunction);
     document.removeEventListener("keyup", stopHold);
@@ -550,6 +566,7 @@ chrome.storage.local.get(["theme"], function(result) {
 	            b2bBonus = result.tetrisSurvivalGameBoard.b2bBonus;
 	            redBar = result.tetrisSurvivalGameBoard.redBar;
 	            powerup = result.tetrisSurvivalGameBoard.powerup;
+	            currentHandicap = result.tetrisSurvivalGameBoard.currentHandicap;
         	}
             if(board == undefined){
                 board = result.tetrisSurvivalGameBoard[0];
@@ -558,7 +575,6 @@ chrome.storage.local.get(["theme"], function(result) {
             else if(current == undefined){
                 newShape();
             }
-            timer.start();
         }
         else{
             init();
@@ -620,6 +636,7 @@ function activatePowerup(powerup){
         }
     }
     else if(powerup == 'Freeze'){
+    	//return if powerup is already currently active
     	if(timeInt<powerupExpiryDate){
     		return;
     	}
@@ -628,6 +645,7 @@ function activatePowerup(powerup){
         powerupVars['frozen'] = true;
     }
     else if(powerup == 'Double Score'){
+    	//return if powerup is already currently active
     	if(timeInt<powerupExpiryDate){
     		return;
     	}
@@ -690,6 +708,7 @@ function checkpoint(cmd){
 	            redBar = result.tetrisSurvivalCheckpoint.redBar;
 	            powerup = result.tetrisSurvivalCheckpoint.powerup;
 	            powerupVars = result.tetrisSurvivalCheckpoint.powerupVars;
+	            powerupExpiryDate = result.tetrisSurvivalCheckpoint.powerupExpiryDate;
 	            lose = false;
 	            haveCheckpoint = true;
 		
@@ -721,44 +740,75 @@ function addGarbage(holeLocation, lines){
         }
     }
 }
+
+function randomHandicap(time){
+	if(timeInt != time){
+		if(timeInt < time){
+			nextEvent = ['Random Handicap',time];
+		}
+	}
+	else{
+		var index = Math.floor(Math.random()*handicaps.length);
+		currentHandicap = [handicaps[index][0],timeInt + handicaps[index][1]];
+	}
+	
+}
+
 function runSurvivalTetris(){
+	//if a handicap is active & it's past it's due date, remove it
+	if(currentHandicap[0] != '' && timeInt == currentHandicap[1]){
+		currentHandicap = ['',0];
+	}
+	//if a powerup has expired, deactivate it
 	if(timeInt == powerupExpiryDate){
 		activatePowerup('deactivate');
 	}
-    var garbageSchedule = []; //[[interval, lines],[interval,lines],etc]
+    var garbageSchedule = []; //[[interval,lines],[interval,lines],etc]
     //0:00-2:30
     if (timeInt <= 150){
         garbageSchedule = [[10, 2]];
+        nextEvent = ['++Difficulty',150];
     }
     //2:31-5:00
     else if (timeInt <= 300){
         garbageSchedule = [[10, 2],[30,4]];
+        nextEvent = ['Checkpoint & ++Difficulty',300];
+        randomHandicap(240);
     }
     //5:01-7:30
     else if (timeInt <= 450){
         garbageSchedule = [[10, 3],[30,4]];
+        nextEvent = ['++Difficulty',450];
     }
     //7:31-10:00
     else if (timeInt <= 600){
         garbageSchedule = [[10, 3],[30,4],[20,1]];
+        nextEvent = ['Checkpoint & ++Difficulty',600];
+        randomHandicap(540);
     }
     //10:01-12:30
     else if (timeInt <= 750){
         garbageSchedule = [[10, 3],[30,4],[20,1]];
+        nextEvent = ['++Difficulty',750];
     }
     //12:31-15:00
     else if (timeInt <= 900){
         garbageSchedule = [[10, 3],[30,4],[20,1],[50,6]];
+        nextEvent = ['Checkpoint & ++Difficulty',900];
+        randomHandicap(840);
     }
     //15:01-17:30
     else if (timeInt <= 1050){
         garbageSchedule = [[10, 3],[30,4],[20,1],[50,10]];
+        nextEvent = ['++Difficulty',1050];
     }
     //17:30-20:00
     else if (timeInt <= 1200){
         garbageSchedule = [[10, 3],[30,4],[15,1],[50,10]];
+        nextEvent = ["didnt plan this far",1200];
+        randomHandicap(1140);
     }
-    if(!frozen){
+    if(!powerupVars['frozen']){
     	//increase red bar
 		for (var i = garbageSchedule.length - 1; i >= 0; i--) {
 	        if(timeInt % garbageSchedule[i][0] == 0){
@@ -830,7 +880,6 @@ function init() {
     }
     activatePowerup('deactivate');
     timer.reset();
-    timer.start();
     lockDelay.stop();
     lockDelay.reset();
     shapeBag = [];
@@ -847,6 +896,8 @@ function init() {
     redBar = [];
     powerup = $("#powerups").val();
     lose = false;
+    currentHandicap = ['',0];
+    nextEvent = ['',0];
     newShape();
 }
 
@@ -859,7 +910,13 @@ function tick(key) {
     if(!$("#tetrisSurvivalCanvas").is(":visible")){
         goBack();
     }
-
+    if(currentHandicap[0] == 'High Gravity'){
+    	for (var i = 6; i >= 0; i--) {
+    		if ( valid( 0, 1 ) ) {
+        		++currentY;
+    		}
+    	}
+    }
     if ( valid( 0, 1 ) ) {
         ++currentY;
     }
@@ -909,6 +966,8 @@ function tick(key) {
             b2bBonus: b2bBonus,
             powerup: powerup,
             powerupVars: powerupVars,
+            powerupExpiryDate: powerupExpiryDate,
+            currentHandicap: currentHandicap,
             lose: false
             }});
     }
@@ -1121,7 +1180,7 @@ function keyPress( key ) {
             }
             break;
         case 'rotate':
-            if (currentId != 3) {
+            if (currentId != 3 && currentHandicap[0] != 'No Rotate') {
                 var rotated = rotate( current, 'normal' );
                 if (currentId == 0) {
                     tests = testI[rotated[1].toString() + ", " + rotated[2].toString()]
@@ -1147,7 +1206,7 @@ function keyPress( key ) {
             tick('drop');
             break;
         case 'hold':
-            if(canHoldShape){
+            if(canHoldShape && currentHandicap[0] != 'No Hold'){
                 var lastShapeId = currentId;
                 newShape(heldShapeId);
                 heldShapeId = lastShapeId;
@@ -1215,6 +1274,7 @@ function newGame() {
     clearAllIntervals();
     intervalRender = setInterval(render, renderInterval);
     interval = setInterval( tick, tickInterval);
+    timer.start();
 }
 
 function clearAllIntervals(){
@@ -1230,22 +1290,18 @@ function refreshIntervals(){
 }
 
 function keydownFunction(e) {
-    var keys = {
-        37: 'left',
-        39: 'right',
-        40: 'down',
-        38: 'rotate',
-        32: 'drop',
-        16: 'hold',
-        17: 'rotateOther',
-        81: 'powerup'
-    };
+    if(currentHandicap[0] == 'Reverse Controls'){
+    	keys[37] = 'right';
+    	keys[39] = 'left';
+    	keys[38] = 'rotateOther';
+    	keys[17] = 'rotate';
+    }
     if (typeof keys[ e.keyCode ] != 'undefined') {
-        if (e.keyCode == 37){
+        if (keys[e.keyCode] == 'left'){
             keypress = true;
             holdLeft = true;
         }
-        else if (e.keyCode == 39){
+        else if (keys[e.keyCode] == 'right'){
             keypress = true;
             holdRight = true;
         }
@@ -1254,12 +1310,12 @@ function keydownFunction(e) {
     }
 };
 function stopHold(e){
-    if (e.keyCode == 37){
+    if (keys[e.keyCode] == 'left'){
         holdLeft = false;
         keypress = false;
         keydownTime = holdDelay;
     }
-    else if (e.keyCode == 39){
+    else if (keys[e.keyCode] == 'right'){
         holdRight = false;
         keypress = false;
         keydownTime = holdDelay;
@@ -1318,30 +1374,33 @@ function render() {
 //reset board
     ctx.clearRect( 50, 0, W, H );
 
-//draw settled blocks
-    ctx.strokeStyle = theme1;
-    for ( var x = 0; x < COLS; ++x ) {
-        for ( var y = 0; y < ROWS; ++y ) {
-            if ( board[ y ][ x ] ) {
-                ctx.fillStyle = setColor(board[y][x] - 1);
-                drawBlock(x, y, '#aaaaaa');
-            }
-        }
-    }
-//draw ghost block
-    ctx.strokeStyle = theme2;
-    ctx.lineWidth=0.5;
-    yValid=0;
-    while( valid(0, yValid) ) {
-        ++yValid;
-    }
-    for (var y = 0; y < 4; ++y ) {
-        for ( var x = 0; x < 4; ++x ) {
-            if ( current[ y ][ x ] ) {
-                drawShadowBlock(currentX + x, currentY + y + yValid - 1, ghostColors[currentId]);
-            }
-        }
-    }
+	if(currentHandicap[0] != 'Blind'){
+		//draw settled blocks
+		ctx.strokeStyle = theme1;
+	    for ( var x = 0; x < COLS; ++x ) {
+	        for ( var y = 0; y < ROWS; ++y ) {
+	            if ( board[ y ][ x ] ) {
+	                ctx.fillStyle = setColor(board[y][x] - 1);
+	                drawBlock(x, y, '#aaaaaa');
+	            }
+	        }
+	    }
+		//draw ghost block
+	    ctx.strokeStyle = theme2;
+	    ctx.lineWidth=0.5;
+	    yValid=0;
+	    while( valid(0, yValid) ) {
+	        ++yValid;
+	    }
+	    for (var y = 0; y < 4; ++y ) {
+	        for ( var x = 0; x < 4; ++x ) {
+	            if ( current[ y ][ x ] ) {
+	                drawShadowBlock(currentX + x, currentY + y + yValid - 1, ghostColors[currentId]);
+	            }
+	        }
+	    }
+	}
+    
 //draw current block
     ctx.strokeStyle = theme1;
     ctx.lineWidth=2;
@@ -1357,20 +1416,42 @@ function render() {
 
     //draw timer
     ctx.fillStyle = theme2;
-      ctx.font="Bold 15px Verdana";
+      ctx.font="Bold 10px Verdana";
       ctx.textBaseline="bottom"; 
       ctx.textAlign="left";
-      ctx.fillText("Time: "+tetrisSurvivalFormatTime(timeInt),60,15);
+      ctx.fillText("Time: "+tetrisSurvivalFormatTime(timeInt),60,10);
+
+    //draw next event
+    ctx.textAlign="right";
+    ctx.fillText(nextEvent[0],290,10);
+    ctx.fillText('In '+tetrisSurvivalFormatTime(nextEvent[1]-timeInt),290,20);
+
+    //if handicap
+    ctx.fillStyle = 'red';
+    if(currentHandicap[0] != ''){
+    	ctx.fillText(currentHandicap[0] + ' ' + (currentHandicap[1] - timeInt),290,40);
+    }
 
     //draw score & powerup stats
-      ctx.font="Bold 15px Verdana";
-      ctx.textBaseline="bottom"; 
-      ctx.textAlign="left";
-      if(score>=powerupCosts[powerup]){
+    ctx.textAlign="left";
+    ctx.fillStyle = theme2;
+      //for powerups with a duration
+      if(powerup == 'Double Score' || powerup == 'Freeze'){
+      	if(timeInt <= powerupExpiryDate){
+      		ctx.fillStyle = 'blue';
+      		ctx.fillText(powerupExpiryDate - timeInt,150,40);
+      	}
+      	else if(score>=powerupCosts[powerup] && timeInt >= powerupExpiryDate){
+      		ctx.fillStyle = 'green';
+      	}
+      }
+      //for instant powerups
+      else if(score>=powerupCosts[powerup]){
         ctx.fillStyle = 'green';
       }
-      ctx.fillText("Score: "+score+"/"+powerupCosts[powerup],60,35);
-      ctx.fillText(powerup,60,55);
+      ctx.fillText("Score: "+score+"/"+powerupCosts[powerup],60,30);
+      ctx.fillText(powerup,60,40);
+
 
     // Draw hold and next piece
     ctx.fillStyle = theme5;
@@ -1451,18 +1532,25 @@ function render() {
     ctx.fillStyle = theme2;
     if(move != "" && debbieDelay < 1000){
     	defaultDebbie.start();
-        //print move, eg TSPIN SINGLE
+        //print "Back to Back"
         if(b2bBonus == 1.5){
-            ctx.fillText("Back to Back",150,80)
+            ctx.font="Bold 15px Verdana";
+            ctx.fillText("Back",24,100)
+            ctx.fillText("to",24,113)
+            ctx.fillText("Back",24,125)
         }
-        ctx.font="Bold 25px Verdana";
-        ctx.fillStyle = 'orange';
-        ctx.fillText(move,150,100);
+        //print move, eg TSPIN SINGLE
+        ctx.font="Bold 20px Verdana";
+	    for (var i = 0; i <= move.length - 1; i++) {
+	    	ctx.fillText(move[i],24,150 + 25*i);
+	    }
         //print combo length
-        ctx.fillStyle = 'green';
         if(comboLength > 1){
-            ctx.font="Bold 20px Verdana";
-            ctx.fillText(comboLength - 1 + "Combo!",150,120);
+        	ctx.fillStyle = 'green';
+            ctx.font="Bold 30px Verdana";
+            ctx.fillText(comboLength - 1,325,400);
+            ctx.font="Bold 10px Verdana";
+            ctx.fillText("Combo!",325,430);
         }
     }
     else{
@@ -1473,7 +1561,7 @@ function render() {
 
     //draw red bar
 	ctx.fillStyle = 'red';
-    ctx.fillRect(10, 500, 30, -20*barHeight(redBar));
+    ctx.fillRect(0, 500, 5, -20*barHeight(redBar));
 }
 
 function tetrisSurvivalFormatTime(time){
@@ -1522,14 +1610,13 @@ function gameEnded() {
         else{
             var gameHighscore = result["gameHighScore"][game];
             ctx.font="20px Verdana";
-            ctx.fillText("Time Alive: "+timeInt,175,130);
+            ctx.fillText("Time Alive: "+tetrisSurvivalFormatTime(timeInt),175,130);
             ctx.font="14px Verdana";
             ctx.fillText("Highscore: "+tetrisSurvivalFormatTime(gameHighscore), 175, 152);
             gameHighScore(game, gameHighscore);
         }
         ctx.font="14px Verdana";
         ctx.fillText("Press ESC To Return To The Menu",175,190);
-        //ctx.fillText("Press Enter To View Leaderboard",175,206);
 
     });
 }
