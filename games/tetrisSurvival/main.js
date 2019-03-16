@@ -370,7 +370,7 @@ var currentId;
 var canHoldShape = true;
 var timeInt = 0;
 var lockDelayInt = 0;
-var keys = {
+const controls = {
     37: 'left',
     39: 'right',
     40: 'down',
@@ -380,6 +380,7 @@ var keys = {
     17: 'rotateOther',
     81: 'powerup'
 };
+var keys = controls;
 
 //moving left & right
 var holdLeft = false;
@@ -405,11 +406,11 @@ const corners = [[3,2],[1,2],[3,0],[1,0]];
 
 //survival variables
 var redBar = [];
-const handicaps = [['No Hold',30],['High Gravity',30],['No Rotate',20],['Blind',20],['Reverse Controls',45]];
+const handicaps = [['No Hold',45],['High Gravity',45],['No Rotate',20],['Blind',20],['Reverse Controls',45]];
 var currentHandicap = ['',0];
 var nextEvent = ['',0];
 var powerup = $("#powerups").val();
-const powerupCosts = {'Clone Tetrimino': 3000,'Clear Lines':4000,'Freeze':4000,'Double Score':2000};
+const powerupCosts = {'Clone Tetrimino': 750,'Clear Lines':4000,'Freeze':4000,'Double Score':5000};
 var haveCheckpoint = true;
 	//powerup vars
 var powerupExpiryDate = -1;
@@ -542,8 +543,7 @@ chrome.storage.local.get(["theme"], function(result) {
     chrome.storage.local.get(["tetrisSurvivalGameBoard"], function(result) {
         if(Object.keys(result).length != 0 && Object.keys(result.tetrisSurvivalGameBoard).length != 0){
         	if(result.tetrisSurvivalGameBoard.lose || lose){
-//        		checkpoint('load');
-        		init();
+        		checkpoint('load');
         	}
         	else{
         		board = result.tetrisSurvivalGameBoard.board;
@@ -591,7 +591,7 @@ chrome.storage.local.get(["theme"], function(result) {
             canvas.style.display = 'initial';
             newGame();
             if(result.tetrisSurvivalGameBoard.lose || lose){
-        		init();
+        		checkpoint('load');
         	}
         };
         document.getElementById('resume/restart').appendChild(resumeBtn);
@@ -614,22 +614,23 @@ chrome.storage.local.get(["theme"], function(result) {
 
 function activatePowerup(powerup){
 	if(powerup == 'deactivate'){
+		powerupExpiryDate = -1;
     	powerupVars['frozen'] = false;
     	powerupVars['scoreMultiplier'] = 1;
     	return;
     }
     if(powerup == 'Clone Tetrimino'){
-        //next 5 blocks is the same as the current one
-        shapeBag.push(currentId, currentId, currentId, currentId, currentId);
+        //next block is the same as the current one
+        shapeBag.push(currentId);
     }
     else if(powerup == 'Clear Lines'){
-        //clear 4 lines
-        for (var y = ROWS - 1; y >= 4; y--) {
+        //clear 3 lines
+        for (var y = ROWS - 1; y >= 3; y--) {
             for (var x = COLS - 1; x >= 0; x--) {
                 board[y][x]=board[y-4][x];
             }
         }
-        for(var y = 4; y >= 0; y--){
+        for(var y = 3; y >= 0; y--){
             for (var x = COLS - 1; x >= 0; x--) {
                 board[y][x]=0;
             }
@@ -640,8 +641,8 @@ function activatePowerup(powerup){
     	if(timeInt<powerupExpiryDate){
     		return;
     	}
-    	//freeze red bar for 20s
-        powerupExpiryDate = timeInt+20;
+    	//freeze red bar for 25s
+        powerupExpiryDate = timeInt+25;
         powerupVars['frozen'] = true;
     }
     else if(powerup == 'Double Score'){
@@ -649,8 +650,8 @@ function activatePowerup(powerup){
     	if(timeInt<powerupExpiryDate){
     		return;
     	}
-    	//double score gains for 30s
-    	powerupExpiryDate = timeInt+30;
+    	//double score gains for 45s
+    	powerupExpiryDate = timeInt+45;
         powerupVars['scoreMultiplier'] = 2;
     }
     score -= powerupCosts[powerup];
@@ -714,7 +715,7 @@ function checkpoint(cmd){
 		
 			}
 			else{
-				haveCheckpoint = false;
+				init();
 			}
 		});
 	}
@@ -766,45 +767,45 @@ function runSurvivalTetris(){
     var garbageSchedule = []; //[[interval,lines],[interval,lines],etc]
     //0:00-2:30
     if (timeInt <= 150){
-        garbageSchedule = [[10, 2]];
+        garbageSchedule = [[15, 2]];
         nextEvent = ['++Difficulty',150];
     }
     //2:31-5:00
     else if (timeInt <= 300){
-        garbageSchedule = [[10, 2],[30,4]];
+        garbageSchedule = [[15, 2],[50,4]];
         nextEvent = ['Checkpoint & ++Difficulty',300];
         randomHandicap(240);
     }
     //5:01-7:30
     else if (timeInt <= 450){
-        garbageSchedule = [[10, 3],[30,4]];
+        garbageSchedule = [[10, 3],[50,4]];
         nextEvent = ['++Difficulty',450];
     }
     //7:31-10:00
     else if (timeInt <= 600){
-        garbageSchedule = [[10, 3],[30,4],[20,1]];
+        garbageSchedule = [[10, 3],[50,4],[20,1]];
         nextEvent = ['Checkpoint & ++Difficulty',600];
         randomHandicap(540);
     }
     //10:01-12:30
     else if (timeInt <= 750){
-        garbageSchedule = [[10, 3],[30,4],[20,1]];
+        garbageSchedule = [[10, 3],[50,4],[20,1]];
         nextEvent = ['++Difficulty',750];
     }
     //12:31-15:00
     else if (timeInt <= 900){
-        garbageSchedule = [[10, 3],[30,4],[20,1],[50,6]];
+        garbageSchedule = [[10, 3],[50,4],[20,1],[75,6]];
         nextEvent = ['Checkpoint & ++Difficulty',900];
         randomHandicap(840);
     }
     //15:01-17:30
     else if (timeInt <= 1050){
-        garbageSchedule = [[10, 3],[30,4],[20,1],[50,10]];
+        garbageSchedule = [[10, 3],[50,4],[20,1],[75,10]];
         nextEvent = ['++Difficulty',1050];
     }
     //17:30-20:00
     else if (timeInt <= 1200){
-        garbageSchedule = [[10, 3],[30,4],[15,1],[50,10]];
+        garbageSchedule = [[10, 3],[30,4],[15,1],[75,10]];
         nextEvent = ["didnt plan this far",1200];
         randomHandicap(1140);
     }
@@ -928,14 +929,11 @@ function tick(key) {
             valid(0, 1);
             clearLines();
             if (lose) {
-            	checkpoint('load');
-            	if(!haveCheckpoint){
-					chrome.storage.local.set({tetrisSurvivalGameBoard: {lose: true}});
-	                clearAllIntervals();
-	                timer.stop();
-	                setTimeout(gameEnded, 30);
-	                return false;
-            	}
+				chrome.storage.local.set({tetrisSurvivalGameBoard: {lose: true}});
+                clearAllIntervals();
+                timer.stop();
+                setTimeout(gameEnded);
+                return false;
             }
             newShape();
             canHoldShape = true;
@@ -1295,6 +1293,9 @@ function keydownFunction(e) {
     	keys[39] = 'left';
     	keys[38] = 'rotateOther';
     	keys[17] = 'rotate';
+    }
+    else{
+    	keys = controls;
     }
     if (typeof keys[ e.keyCode ] != 'undefined') {
         if (keys[e.keyCode] == 'left'){
