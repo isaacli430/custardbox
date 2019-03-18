@@ -406,11 +406,11 @@ const corners = [[3,2],[1,2],[3,0],[1,0]];
 
 //survival variables
 var redBar = [];
-const handicaps = [['No Hold',45],['High Gravity',45],['No Rotate',20],['Blind',20],['Reverse Controls',45]];
+const handicaps = [['No Hold',45],['High Gravity',30],['No Rotate',20],['Blind',15],['Reverse Controls',30]];
 var currentHandicap = ['',0];
 var nextEvent = ['',0];
 var powerup = $("#powerups").val();
-const powerupCosts = {'Clone Tetrimino': 750,'Clear Lines':4000,'Freeze':4000,'Double Score':5000};
+const powerupCosts = {'Clone Tetrimino': 750,'Clear Lines':4000,'Freeze':3000,'Double Score':5000};
 var haveCheckpoint = true;
 	//powerup vars
 var powerupExpiryDate = -1;
@@ -641,8 +641,8 @@ function activatePowerup(powerup){
     	if(timeInt<powerupExpiryDate){
     		return;
     	}
-    	//freeze red bar for 25s
-        powerupExpiryDate = timeInt+25;
+    	//freeze red bar for 20s
+        powerupExpiryDate = timeInt+20;
         powerupVars['frozen'] = true;
     }
     else if(powerup == 'Double Score'){
@@ -767,23 +767,23 @@ function runSurvivalTetris(){
     var garbageSchedule = []; //[[interval,lines],[interval,lines],etc]
     //0:00-2:30
     if (timeInt <= 150){
-        garbageSchedule = [[15, 2]];
+        garbageSchedule = [[20, 2]];
         nextEvent = ['++Difficulty',150];
     }
     //2:31-5:00
     else if (timeInt <= 300){
-        garbageSchedule = [[15, 2],[50,4]];
+        garbageSchedule = [[20, 2],[50,4]];
         nextEvent = ['Checkpoint & ++Difficulty',300];
         randomHandicap(240);
     }
     //5:01-7:30
     else if (timeInt <= 450){
-        garbageSchedule = [[10, 3],[50,4]];
+        garbageSchedule = [[15, 3],[50,4]];
         nextEvent = ['++Difficulty',450];
     }
     //7:31-10:00
     else if (timeInt <= 600){
-        garbageSchedule = [[10, 3],[50,4],[20,1]];
+        garbageSchedule = [[15, 3],[50,4],[20,1]];
         nextEvent = ['Checkpoint & ++Difficulty',600];
         randomHandicap(540);
     }
@@ -1423,9 +1423,16 @@ function render() {
       ctx.fillText("Time: "+tetrisSurvivalFormatTime(timeInt),60,10);
 
     //draw next event
+    ctx.font="Bold 15px Verdana";
     ctx.textAlign="right";
-    ctx.fillText(nextEvent[0],290,10);
-    ctx.fillText('In '+tetrisSurvivalFormatTime(nextEvent[1]-timeInt),290,20);
+    if(nextEvent[0] == 'Random Handicap'){
+    	ctx.fillStyle = 'red';
+    }
+    else if (nextEvent[0] == 'Checkpoint & ++Difficulty'){
+    	ctx.fillStyle = 'green';
+    }
+    ctx.fillText(nextEvent[0],290,15);
+    ctx.fillText('In '+tetrisSurvivalFormatTime(nextEvent[1]-timeInt),290,30);
 
     //if handicap
     ctx.fillStyle = 'red';
@@ -1434,6 +1441,7 @@ function render() {
     }
 
     //draw score & powerup stats
+    ctx.font="Bold 10px Verdana";
     ctx.textAlign="left";
     ctx.fillStyle = theme2;
       //for powerups with a duration
