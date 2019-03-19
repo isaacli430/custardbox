@@ -773,7 +773,7 @@ function runSurvivalTetris(){
     //2:31-5:00
     else if (timeInt <= 300){
         garbageSchedule = [[20, 2],[50,4]];
-        nextEvent = ['Checkpoint & ++Difficulty',300];
+        nextEvent = ['Checkpoint, ++Difficulty',300];
         randomHandicap(240);
     }
     //5:01-7:30
@@ -784,7 +784,7 @@ function runSurvivalTetris(){
     //7:31-10:00
     else if (timeInt <= 600){
         garbageSchedule = [[15, 3],[50,4],[20,1]];
-        nextEvent = ['Checkpoint & ++Difficulty',600];
+        nextEvent = ['Checkpoint, ++Difficulty',600];
         randomHandicap(540);
     }
     //10:01-12:30
@@ -795,7 +795,7 @@ function runSurvivalTetris(){
     //12:31-15:00
     else if (timeInt <= 900){
         garbageSchedule = [[10, 3],[50,4],[20,1],[75,6]];
-        nextEvent = ['Checkpoint & ++Difficulty',900];
+        nextEvent = ['Checkpoint, ++Difficulty',900];
         randomHandicap(840);
     }
     //15:01-17:30
@@ -1295,7 +1295,10 @@ function keydownFunction(e) {
     	keys[17] = 'rotate';
     }
     else{
-    	keys = controls;
+    	keys[37] = 'left';
+        keys[39] = 'right';
+        keys[38] = 'rotate';
+        keys[17] = 'rotateOther';
     }
     if (typeof keys[ e.keyCode ] != 'undefined') {
         if (keys[e.keyCode] == 'left'){
@@ -1425,19 +1428,22 @@ function render() {
     //draw next event
     ctx.font="Bold 15px Verdana";
     ctx.textAlign="right";
-    if(nextEvent[0] == 'Random Handicap'){
-    	ctx.fillStyle = 'red';
+    var nextEvents = nextEvent[0].split(', ');
+    for (var i = 0; i < nextEvents.length; i++) {
+        if(nextEvents[i] == 'Random Handicap'){
+            ctx.fillStyle = 'red';
+        }
+        else if(nextEvents[i] == 'Checkpoint'){
+            ctx.fillStyle = 'green';
+        }
+        ctx.fillText(nextEvents[i],290,(15 +15*i));
     }
-    else if (nextEvent[0] == 'Checkpoint & ++Difficulty'){
-    	ctx.fillStyle = 'green';
-    }
-    ctx.fillText(nextEvent[0],290,15);
-    ctx.fillText('In '+tetrisSurvivalFormatTime(nextEvent[1]-timeInt),290,30);
+    ctx.fillText('In '+tetrisSurvivalFormatTime(nextEvent[1]-timeInt),290,(15 +15*nextEvents.length));
 
     //if handicap
     ctx.fillStyle = 'red';
     if(currentHandicap[0] != ''){
-    	ctx.fillText(currentHandicap[0] + ' ' + (currentHandicap[1] - timeInt),290,40);
+    	ctx.fillText(currentHandicap[0] + ' ' + (currentHandicap[1] - timeInt),290,60);
     }
 
     //draw score & powerup stats
